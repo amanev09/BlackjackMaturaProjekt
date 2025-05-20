@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <random>
+#include <unordered_map>
 
 class Card {
 private:
@@ -30,12 +31,8 @@ public:
     }
 
     // Returns the rank of the card
-    char getRank() const noexcept {
-        return rank;
-    }
-    char getSuit() const noexcept {
-        return suit;
-    }
+    char getRank() const noexcept { return rank; }
+    char getSuit() const noexcept { return suit; }
 };
 
 class Hand {
@@ -67,6 +64,10 @@ public:
             softAceCount--;
         }
         return totalValue;
+    }
+
+    Card getCard(int i = 0) const { // returns card for given index i
+        return cards[i];
     }
 
     void printHand() const noexcept {
@@ -120,7 +121,8 @@ public:
 class Player {
     std::string name;
     std::vector<Hand> hands;
-    int bet = 0;
+    double bet = 0;
+    std::unordered_map<std::string, int> sideBets; // dictionary for the sidebet and respective bet amount. includes but not limited to insurance, even money
 public:
     // Constructor to set player name and initialize one hand
     Player(const std::string& playerName) : name(playerName) {
@@ -134,22 +136,32 @@ public:
         }
     }
     
-    int handCount() const {
-        return hands.size();
+    void setSideBet(const std::string& betName, int amount) {
+        sideBets[betName] = amount;
     }
 
-    int getBet() const {
+    int getSideBet(const std::string& betName) const {
+        auto it = sideBets.find(betName);
+        return it != sideBets.end() ? it->second : 0; // returns 0 if not set
+    }
+
+    std::string getName() const noexcept { return name; }
+
+    int handCount() const noexcept {
+        return static_cast<int>(hands.size());
+    }
+
+    double getBet() const noexcept {
         return bet;
     }
 
-    void setBet(int bet) {
+    void setBet(int bet) noexcept {
         this->bet = bet;
     }
 
     // Access player's hands
     std::vector<Hand>& getHands() noexcept { return hands; }
     const std::vector<Hand>& getHands() const noexcept { return hands; }
-
 };
 
 class Dealer {
@@ -165,6 +177,10 @@ public:
         hand.addCard(card);
     }
 
+    Card getWholeCard() const {
+        return hand.getCard(1);
+    }
+
     // Access dealer's hand
     Hand& getHand() noexcept { return hand; }
 };
@@ -173,10 +189,7 @@ struct GameRules {
     int deckCount = 1;
 };
 
-
-
 void blackjackRound() { // plays one full round of blackjack for given arguments.
-
 }
 
 int main()
@@ -186,37 +199,90 @@ int main()
     std::vector<Player> players;
     GameRules r;
     Player p("Nevio");
-    players.push_back(p);
     p.setBet(1);
-    Dealer d; 
+    players.push_back(p);
+    Dealer d;
     Shoe shoe(1);
     shoe.shuffle();
 
-    
+    // ask for bet(s) and set via setBet
+    for (int i = 0; i < players.size(); ++i) {
+        int bet = 0;
+        std::cout << p.getName() << " Bet: ";
+        std::cin >> bet;
+        players[i].setBet(bet);
+    }
+
     // first all players get 1 card, then dealer gets 1 card, then all players second card, then dealer second card(hole card which is hidden)
     for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
 
         players[i].addCard(shoe.deal()); // removes from shoe, adds to player
-        players[i].getHands()[0].printHand();
     }
-    
+
     d.addCard(shoe.deal());
     for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
 
         players[i].addCard(shoe.deal()); // removes from shoe, adds to player
-        players[i].getHands()[0].printHand();
     }
     d.addCard(shoe.deal());
-    
+
     // start with pregame checks now
     // 
-    // first check if dealer has an ace
-    // if he does, offer all players insurance, except the ones who have a blackjack, offer them even money
-    // dealer peeks whole card, resolve sidebets. If dealer has blackjack, end round.
-    // then check if dealer has a 10. If he does, also end the round.
+   // check if dealer has ace
+    // if he does:
+        // offer all players insurance, those who have blackjack are offered even money
+        // dealer peeks whole card, resolves sidebets. If dealer has blackjack, end round.
+    // if he doesnt, check if he has 10
+    // if he does:
+        // peek whole card, end round if blackjack
+    // pregame checks over, continue with normal game if not aborted
 
-    
-    std::cout << "Hell\n";
+    if (d.getWholeCard().getRank() == 'A') { // dealer has ace upcard, offer insurance and if necessary even money
+
+        for (int i = 0; i < players.size(); ++i) { // loop through every player
+
+            if (players[i].getHands()[0].getValue() == 21) { // players has blackjack, offer even money
+                std::cout << "Do you want even money(y/n): ";
+                char input;
+                std::cin >> input;
+                if (input == 'y') {
+                    // give 1:1 payout immediately!
+                    break;
+                }
+                else if (input == 'n') {
+                    // dont do anything
+                    break;
+                }
+                else {
+                    std::cout << "Invalid, please enter a valid choice!\n";
+                }
+            }
+            else { // player doesnt have blackjack, offer insurance
+                while (true) {
+                    std::cout << "Do you want insurance(y/n): ";
+                    char input;
+                    std::cin >> input;
+                    if (input == 'y') {
+                        players[i].setSideBet("insurance", players[i].getBet() / 2);
+                        break;
+                    }
+                    else if (input == 'n') {
+                        break;
+                    }
+                    else {
+                        std::cout << "Invalid, please enter a valid choice!\n";
+                    }
+                }
+            }
+            
+        }
+        // offered everything to all players, dealer peeks whole card now
+        if (d.getHand().getValue() == 21) {
+            // dealer blackjack, end round!
+        }
+
+    }
+
 
 
     return 0;
