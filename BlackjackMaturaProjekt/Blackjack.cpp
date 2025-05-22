@@ -38,6 +38,8 @@ public:
 class Hand {
     std::vector<Card> cards; // cards in hand
     double bet = 0; // bet is specific to each hand, not player
+    bool flagIsInTheGame = true; // is the hand still in the game and therefore needs to be prompted for actions?
+    bool flagIsHandResolved = false; // has the hand already been resolved? If not, we need to resolve it at the end of the game.
 public:
     void addCard(const Card& card) {
         cards.push_back(card); // adds card to hand
@@ -46,6 +48,11 @@ public:
     void clear() noexcept {
         cards.clear();
     }
+
+    bool getFlagIsInTheGame() const noexcept { return flagIsInTheGame; }
+    void setFlagIsInTheGame(bool flag) { flagIsInTheGame = flag; }
+    bool getFlagIsHandResolved() const noexcept { return flagIsHandResolved; }
+    void setFlagIsHandResolved(bool flag) { flagIsHandResolved = flag; }
 
     int getValue() const noexcept { // returns value of all Hands adjusted for Aces
         int totalValue = 0;
@@ -181,6 +188,10 @@ public:
         return hand.getCard(1);
     }
 
+    Card getUpCard() const {
+        return hand.getCard(0);
+    }
+
     // Access dealer's hand
     Hand& getHand() noexcept { return hand; }
 };
@@ -237,53 +248,70 @@ int main()
         // peek whole card, end round if blackjack
     // pregame checks over, continue with normal game if not aborted
 
-    if (d.getWholeCard().getRank() == 'A') { // dealer has ace upcard, offer insurance and if necessary even money
+    bool flagRoundEnd = false;
+
+    if (d.getUpCard().getRank() == 'A' and not flagRoundEnd) { // dealer has ace upcard, offer insurance and if necessary even money
 
         for (int i = 0; i < players.size(); ++i) { // loop through every player
-
+            char choice = 'f';
             if (players[i].getHands()[0].getValue() == 21) { // players has blackjack, offer even money
-                std::cout << "Do you want even money(y/n): ";
-                char input;
-                std::cin >> input;
-                if (input == 'y') {
-                    // give 1:1 payout immediately!
-                    break;
-                }
-                else if (input == 'n') {
-                    // dont do anything
-                    break;
-                }
-                else {
-                    std::cout << "Invalid, please enter a valid choice!\n";
-                }
-            }
-            else { // player doesnt have blackjack, offer insurance
-                while (true) {
-                    std::cout << "Do you want insurance(y/n): ";
-                    char input;
-                    std::cin >> input;
-                    if (input == 'y') {
-                        players[i].setSideBet("insurance", players[i].getBet() / 2);
-                        break;
-                    }
-                    else if (input == 'n') {
-                        break;
-                    }
-                    else {
+
+                while (choice != 'y' && choice != 'n') {
+                    std::cout << "Do you want even money(y/n): ";
+                    std::cin >> choice;
+                    if (choice != 'y' && choice != 'n') {
                         std::cout << "Invalid, please enter a valid choice!\n";
                     }
                 }
+                
+                if (choice == 'y') {
+                    // give 1:1 payout immediately!
+                    choice = 'f';
+                }
+                else if (choice == 'n') {
+                    // dont do anything
+                    choice = 'f';
+                }
+            }
+            else { // player doesnt have blackjack, offer insurance
+                while (choice != 'y' && choice != 'n') {
+                    std::cout << "Do you want insurance(y/n): ";
+                    std::cin >> choice;
+                    if (choice != 'y' && choice != 'n') {
+                        std::cout << "Invalid, please enter a valid choice!\n";
+                    }
+                }
+                if (choice == 'y') {
+                    // set insurance sidebet
+                    players[i].setSideBet("insurance", players[i].getBet() / 2);
+
+                }else if (choice == 'n') {
+                    // dont do anything
+                }
+
             }
             
         }
         // offered everything to all players, dealer peeks whole card now
-        if (d.getHand().getValue() == 21) {
+        if (d.getWholeCard().getValue() == 10) { // Ass up card + 10 hidden card = 21. 
             // dealer blackjack, end round!
         }
 
     }
+    else if (d.getUpCard().getValue() == 10 and not flagRoundEnd) { // game not ended yet, continue with checks
 
+        // check for dealer blackjack and dont offer any sidebets. If dealer has 10+A round ends immedisately always.
+        flagRoundEnd = true;
+    }
 
+    // pregame checks over
 
+    // loop through all hands that havent been resolved yet, ask the owner of the hand what to do.
+    for (Player& player : players) { // loop all players
+        for (Hand& hand : player.getHands()) { // loop all hands of a player
+            // check and perform a hand.
+            std::cout << hand.getFlagIsInTheGame();
+        }
+    }
     return 0;
 }
