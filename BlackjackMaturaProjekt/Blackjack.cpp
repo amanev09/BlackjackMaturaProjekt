@@ -81,7 +81,7 @@ public:
         for (const Card& card : cards) {
             std::cout << card.getRank() << card.getSuit() << " ";
         }
-        std::cout << std::endl;
+        std::cout << "(" << this->getValue()<<")" << std::endl;
     }
 };
 
@@ -192,6 +192,9 @@ public:
         return hand.getCard(0);
     }
 
+    void printStartingHand() { // prints the dealers hand in the format: UP_CARD; WHOLE_CARD
+        std::cout << hand.getCard(0).toString()<<" " << "WHOLECARD" << "(" << hand.getCard(0).getValue() << ")" << std::endl;
+    }
     // Access dealer's hand
     Hand& getHand() noexcept { return hand; }
 };
@@ -310,8 +313,19 @@ int main()
     for (Player& player : players) { // loop all players
         for (Hand& hand : player.getHands()) { // loop all hands of a player
             // check and perform a hand.
-            std::cout << hand.getFlagIsInTheGame();
+            
+            if (hand.getFlagIsInTheGame()) {
+                // hand still in the game
+                // ask the owner what to do
+                std::cout << "Dealer: ";
+                d.printStartingHand();
+                std::cout << "\n"<<player.getName()<<": ";
+                hand.printHand();
+                
+                
+            }
         }
     }
+
     return 0;
 }
