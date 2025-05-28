@@ -45,6 +45,15 @@ public:
         cards.push_back(card); // adds card to hand
     }
 
+    Card removeCard(int i) {
+        if (i < 0 || i >= cards.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        Card removed = cards[i];
+        cards.erase(cards.begin() + i);
+        return removed;
+    }
+
     void clear() noexcept {
         cards.clear();
     }
@@ -53,6 +62,14 @@ public:
     void setFlagIsInTheGame(bool flag) { flagIsInTheGame = flag; }
     bool getFlagIsHandResolved() const noexcept { return flagIsHandResolved; }
     void setFlagIsHandResolved(bool flag) { flagIsHandResolved = flag; }
+
+    double getBet() const noexcept {
+        return bet;
+    }
+
+    void setBet(int bet) noexcept {
+        this->bet = bet;
+    }
 
     int getValue() const noexcept { // returns value of all Hands adjusted for Aces
         int totalValue = 0;
@@ -75,6 +92,10 @@ public:
 
     Card getCard(int i = 0) const { // returns card for given index i
         return cards[i];
+    }
+
+    int getCardsCount() {
+        return cards.size();
     }
 
     void printHand() const noexcept {
@@ -128,7 +149,6 @@ public:
 class Player {
     std::string name;
     std::vector<Hand> hands;
-    double bet = 0;
     std::unordered_map<std::string, int> sideBets; // dictionary for the sidebet and respective bet amount. includes but not limited to insurance, even money
 public:
     // Constructor to set player name and initialize one hand
@@ -143,6 +163,11 @@ public:
         }
     }
     
+    Hand& addHand() {
+        hands.emplace_back(); // automatically creates a new hand object
+        return hands.back();
+    }
+
     void setSideBet(const std::string& betName, int amount) {
         sideBets[betName] = amount;
     }
@@ -158,13 +183,6 @@ public:
         return static_cast<int>(hands.size());
     }
 
-    double getBet() const noexcept {
-        return bet;
-    }
-
-    void setBet(int bet) noexcept {
-        this->bet = bet;
-    }
 
     // Access player's hands
     std::vector<Hand>& getHands() noexcept { return hands; }
@@ -201,6 +219,9 @@ public:
 
 struct GameRules {
     int deckCount = 1;
+    int maxSplitHands = -1; // infinite
+    bool doubleAfterSplit = true;
+
 };
 
 void blackjackRound() { // plays one full round of blackjack for given arguments.
@@ -213,30 +234,41 @@ int main()
     std::vector<Player> players;
     GameRules r;
     Player p("Nevio");
-    p.setBet(1);
     players.push_back(p);
     Dealer d;
     Shoe shoe(1);
     shoe.shuffle();
 
     // ask for bet(s) and set via setBet
-    for (int i = 0; i < players.size(); ++i) {
-        int bet = 0;
-        std::cout << p.getName() << " Bet: ";
-        std::cin >> bet;
-        players[i].setBet(bet);
+    for (Player& player : players) {
+        int bet;
+        while (true) {
+            std::cout << player.getName() << " Bet: ";
+            std::cin >> bet;
+            if (std::cin.fail()) {
+                std::cin.clear(); // Clear error flags
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
+                std::cout << "Invalid input! Please enter a number.\n";
+            }
+            else {
+                break; // Valid number entered
+            }
+        }
+        for (Hand& hand : player.getHands()) {
+            hand.setBet(bet);
+        }
     }
 
     // first all players get 1 card, then dealer gets 1 card, then all players second card, then dealer second card(hole card which is hidden)
     for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
 
-        players[i].addCard(shoe.deal()); // removes from shoe, adds to player
+        players[i].addCard(Card('T','S')); // removes from shoe, adds to player
     }
 
-    d.addCard(shoe.deal());
+    d.addCard(Card('T', 'S'));
     for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
 
-        players[i].addCard(shoe.deal()); // removes from shoe, adds to player
+        players[i].addCard(Card('T', 'S')); // removes from shoe, adds to player
     }
     d.addCard(shoe.deal());
 
@@ -286,7 +318,7 @@ int main()
                 }
                 if (choice == 'y') {
                     // set insurance sidebet
-                    players[i].setSideBet("insurance", players[i].getBet() / 2);
+                    players[i].setSideBet("insurance", players[i].getHands()[0].getBet() / 2);
 
                 }else if (choice == 'n') {
                     // dont do anything
@@ -311,18 +343,77 @@ int main()
 
     // loop through all hands that havent been resolved yet, ask the owner of the hand what to do.
     for (Player& player : players) { // loop all players
-        for (Hand& hand : player.getHands()) { // loop all hands of a player
+        for (size_t i = 0; i < player.getHands().size(); ++i) { // loop all hands of a player
             // check and perform a hand.
             
-            if (hand.getFlagIsInTheGame()) {
+            if (player.getHands()[i].getFlagIsInTheGame()) {
                 // hand still in the game
                 // ask the owner what to do
                 std::cout << "Dealer: ";
                 d.printStartingHand();
                 std::cout << "\n"<<player.getName()<<": ";
-                hand.printHand();
+                player.getHands()[i].printHand();
                 
-                
+                // determine which actions are allowed, prompt the player with the allowed actions, reject any non-legal action
+                //hitting always allowed, standing always allowed, double allowed based on rules, splitting allowed when same pair AND rules
+                std::vector<char> allowedChoices;
+                allowedChoices.push_back('h'); allowedChoices.push_back('s'); // these are always allowed
+                // double allowed anytime on the first 2 cards of a hand. SO if a hand has exactly 2 cards, double down is allowed
+                if (player.getHands()[i].getCardsCount() == 2) {
+                    // hand has exactly 2 cards, double is allowed.
+                    allowedChoices.push_back('d');
+                    // also if we are on two cards, check if cards are the same, splitting would also be allowed
+                    if (player.getHands()[i].getCard(0).getRank() == player.getHands()[i].getCard(1).getRank()) {
+                        // splitting allowed
+                        allowedChoices.push_back('p');
+                    }
+                }
+                // legal actions determined and safed in allowedChoices vector
+                char choice = 'f';
+                while (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
+                    std::cout << "Available actions: ";
+                    for (char action : allowedChoices) {
+                        switch (action) {
+                        case 'h': std::cout << "Hit (h) "; break;
+                        case 's': std::cout << "Stand (s) "; break;
+                        case 'd': std::cout << "Double (d) "; break;
+                        case 'p': std::cout << "Split (p) "; break;
+
+                        default: std::cout << action << " "; break;
+                        }
+                    }
+                    std::cout << std::endl << "Choice: ";
+
+                    std::cin >> choice;
+                    if (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
+                        std::cout << "Invalid choice!" << std::endl;
+                    }
+                }
+                // we now have a legal choice. Execute that choice now.
+                if (choice == 'h') {
+                    // add card to hand
+                    player.getHands()[i].addCard(shoe.deal());
+                }
+                else if (choice == 's') {
+                    // change flagInTheGame
+                    player.getHands()[i].setFlagIsInTheGame(false);
+                }
+                else if (choice == 'd') {
+                    // double bet and change flagInTheGame
+                    player.getHands()[i].setBet(player.getHands()[i].getBet() * 2);
+                    player.getHands()[i].setFlagIsInTheGame(false);
+                }
+                else if (choice == 'p') {
+                    // remove the second card of the hand, create a new hand object and add that card, then deal 2 new cards
+                    std::cout << player.getHands()[i].getCardsCount();
+                    player.addHand(); // we have hand and hand2 to work with
+                    
+                    player.getHands()[i+1].addCard(player.getHands()[i].removeCard(1)); // remove it and add it to the other hand, then redeal new cards to those hands
+                    player.getHands()[i].addCard(shoe.deal());
+                    player.getHands()[i+1].addCard(shoe.deal());
+                    player.getHands()[i+1].setBet(player.getHands()[i].getBet()); // match the bet of the new hand to the old one
+                    i--; // reduce i by 1 after splitting because we want to make another choice for both new hands
+                }
             }
         }
     }
