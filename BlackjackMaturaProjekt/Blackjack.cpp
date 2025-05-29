@@ -40,6 +40,8 @@ class Hand {
     double bet = 0; // bet is specific to each hand, not player
     bool flagIsInTheGame = true; // is the hand still in the game and therefore needs to be prompted for actions?
     bool flagIsHandResolved = false; // has the hand already been resolved? If not, we need to resolve it at the end of the game.
+    bool flagEvenMoney = false; // did the player take even money for this hand
+    std::unordered_map<std::string, int> sideBets; // dictionary for the sidebet and respective bet amount. includes but not limited to insurance, even money
 public:
     void addCard(const Card& card) {
         cards.push_back(card); // adds card to hand
@@ -62,6 +64,17 @@ public:
     void setFlagIsInTheGame(bool flag) { flagIsInTheGame = flag; }
     bool getFlagIsHandResolved() const noexcept { return flagIsHandResolved; }
     void setFlagIsHandResolved(bool flag) { flagIsHandResolved = flag; }
+    void setFlagEvenMoney(bool flag) { flagEvenMoney = flag; }
+    bool getFlagEvenMoney() { return flagEvenMoney; }
+
+    void setSideBet(const std::string& betName, int amount) {
+        sideBets[betName] = amount;
+    }
+
+    int getSideBet(const std::string& betName) const {
+        auto it = sideBets.find(betName);
+        return it != sideBets.end() ? it->second : 0; // returns 0 if not set
+    }
 
     double getBet() const noexcept {
         return bet;
@@ -90,6 +103,28 @@ public:
         return totalValue;
     }
 
+    bool isSoft() { // determines if hand is soft(contains aces counted as 11)
+        int totalValue = 0;
+        int softAceCount = 0;
+
+        for (const Card& card : cards) {
+            int cardValue = card.getValue();
+            totalValue += cardValue;
+            if (cardValue == 11) {
+                softAceCount++;
+            }
+        }
+        while (totalValue > 21 && softAceCount > 0) {
+            // treat soft aces hard until below 21 or no more soft aces in hand
+            totalValue -= 10;
+            softAceCount--;
+        }
+        if (softAceCount > 0) {
+            return true;
+        }
+        return false;
+    }
+
     Card getCard(int i = 0) const { // returns card for given index i
         return cards[i];
     }
@@ -108,17 +143,11 @@ public:
 
 class Shoe {
     std::vector<Card> cards; // Holds all cards in shoe
+    int deckSize;
 public:
     Shoe(int size = 1) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
-        std::string ranks = "23456789TJQKA";
-        std::string suits = "SHDC";
-        for (int i = 0; i < size; ++i) {
-            for (char suit : suits) {
-                for (char rank : ranks) {
-                    cards.emplace_back(rank, suit); // automatically constructs card and adds to shoe.
-                }
-            }
-        }
+        deckSize = size;
+        reset();
     }
 
     // Shuffles deck using random number generator
@@ -128,9 +157,25 @@ public:
         std::shuffle(cards.begin(), cards.end(), g); // Shuffle the deck
     }
 
+    void reset() {
+        cards.clear();
+        std::string ranks = "23456789TJQKA";
+        std::string suits = "SHDC";
+        for (int i = 0; i < deckSize; ++i) {
+            for (char suit : suits) {
+                for (char rank : ranks) {
+                    cards.emplace_back(rank, suit);
+                }
+            }
+        }
+        shuffle();
+    }
+
+
     Card deal() {
         if (cards.empty()) {
-            throw std::out_of_range("No cards left in deck");
+            reset();
+            std::cout << "Shuffeled Deck!";
         }
         Card dealtCard = cards.back();
         cards.pop_back();
@@ -149,13 +194,18 @@ public:
 class Player {
     std::string name;
     std::vector<Hand> hands;
-    std::unordered_map<std::string, int> sideBets; // dictionary for the sidebet and respective bet amount. includes but not limited to insurance, even money
+    int balance = 0;
 public:
     // Constructor to set player name and initialize one hand
     Player(const std::string& playerName) : name(playerName) {
         hands.emplace_back();
     }
 
+    void setBalance(int balance) {
+        this->balance = balance;
+    }
+    
+    int getBalance() const noexcept{ return balance; }
     // Add a card to the specified hand (default: first hand)
     void addCard(const Card& card, size_t handIndex = 0) {
         if (handIndex < hands.size()) {
@@ -168,14 +218,6 @@ public:
         return hands.back();
     }
 
-    void setSideBet(const std::string& betName, int amount) {
-        sideBets[betName] = amount;
-    }
-
-    int getSideBet(const std::string& betName) const {
-        auto it = sideBets.find(betName);
-        return it != sideBets.end() ? it->second : 0; // returns 0 if not set
-    }
 
     std::string getName() const noexcept { return name; }
 
@@ -262,15 +304,15 @@ int main()
     // first all players get 1 card, then dealer gets 1 card, then all players second card, then dealer second card(hole card which is hidden)
     for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
 
-        players[i].addCard(Card('T','S')); // removes from shoe, adds to player
+        players[i].addCard(Card('2','H')); // removes from shoe, adds to player
     }
 
-    d.addCard(Card('T', 'S'));
+    d.addCard(Card('2', 'S'));
     for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
 
-        players[i].addCard(Card('T', 'S')); // removes from shoe, adds to player
+        players[i].addCard(Card('2', 'S')); // removes from shoe, adds to player
     }
-    d.addCard(shoe.deal());
+    d.addCard(Card('2', 'S'));
 
     // start with pregame checks now
     // 
@@ -287,48 +329,51 @@ int main()
 
     if (d.getUpCard().getRank() == 'A' and not flagRoundEnd) { // dealer has ace upcard, offer insurance and if necessary even money
 
-        for (int i = 0; i < players.size(); ++i) { // loop through every player
-            char choice = 'f';
-            if (players[i].getHands()[0].getValue() == 21) { // players has blackjack, offer even money
+        for (Player& player : players) { // loop through every player
+            for (Hand& hand : player.getHands()) {
+                char choice = 'f';
+                if (hand.getValue() == 21) { // player has blackjack, offer even money and disable the hand
+                    hand.setFlagIsInTheGame(false);
+                    while (choice != 'y' && choice != 'n') {
+                        std::cout << "Do you want even money(y/n): ";
+                        std::cin >> choice;
+                        if (choice != 'y' && choice != 'n') {
+                            std::cout << "Invalid, please enter a valid choice!\n";
+                        }
+                    }
 
-                while (choice != 'y' && choice != 'n') {
-                    std::cout << "Do you want even money(y/n): ";
-                    std::cin >> choice;
-                    if (choice != 'y' && choice != 'n') {
-                        std::cout << "Invalid, please enter a valid choice!\n";
+                    if (choice == 'y') {
+                        // even money was taken, set flag for later use in determining payout
+                        hand.setFlagEvenMoney(true);
+                        choice = 'f';
+                    }
+                    else if (choice == 'n') {
+                        // dont do anything
+                        choice = 'f';
                     }
                 }
-                
-                if (choice == 'y') {
-                    // give 1:1 payout immediately!
-                    choice = 'f';
-                }
-                else if (choice == 'n') {
-                    // dont do anything
-                    choice = 'f';
-                }
-            }
-            else { // player doesnt have blackjack, offer insurance
-                while (choice != 'y' && choice != 'n') {
-                    std::cout << "Do you want insurance(y/n): ";
-                    std::cin >> choice;
-                    if (choice != 'y' && choice != 'n') {
-                        std::cout << "Invalid, please enter a valid choice!\n";
+                else { // player doesnt have blackjack, offer insurance
+                    while (choice != 'y' && choice != 'n') {
+                        std::cout << "Do you want insurance(y/n): ";
+                        std::cin >> choice;
+                        if (choice != 'y' && choice != 'n') {
+                            std::cout << "Invalid, please enter a valid choice!\n";
+                        }
+                    }
+                    if (choice == 'y') {
+                        // set insurance sidebet
+                        hand.setSideBet("insurance", hand.getBet() / 2);
+
+                    }
+                    else if (choice == 'n') {
+                        // dont do anything
                     }
                 }
-                if (choice == 'y') {
-                    // set insurance sidebet
-                    players[i].setSideBet("insurance", players[i].getHands()[0].getBet() / 2);
-
-                }else if (choice == 'n') {
-                    // dont do anything
-                }
-
             }
             
         }
         // offered everything to all players, dealer peeks whole card now
-        if (d.getWholeCard().getValue() == 10) { // Ass up card + 10 hidden card = 21. 
+        if (d.getWholeCard().getValue() == 10) { // Ace up card + 10 hidden card = 21. 
             // dealer blackjack, end round!
         }
 
@@ -341,12 +386,12 @@ int main()
 
     // pregame checks over
 
-    // loop through all hands that havent been resolved yet, ask the owner of the hand what to do.
+    // loop through all hands that havent been played yet, ask the owner of the hand what to do.
     for (Player& player : players) { // loop all players
         for (size_t i = 0; i < player.getHands().size(); ++i) { // loop all hands of a player
             // check and perform a hand.
             
-            if (player.getHands()[i].getFlagIsInTheGame()) {
+            while (player.getHands()[i].getFlagIsInTheGame()) {
                 // hand still in the game
                 // ask the owner what to do
                 std::cout << "Dealer: ";
@@ -412,11 +457,75 @@ int main()
                     player.getHands()[i].addCard(shoe.deal());
                     player.getHands()[i+1].addCard(shoe.deal());
                     player.getHands()[i+1].setBet(player.getHands()[i].getBet()); // match the bet of the new hand to the old one
-                    i--; // reduce i by 1 after splitting because we want to make another choice for both new hands
+                    
+                }
+                // after the choice is executed, check if we busted or not, if we did we need to disable the hand 
+                if (player.getHands()[i].getValue() > 21) { // only > not >= because you could still technically hit a hand with value 21 (except on starting hand)
+                    player.getHands()[i].setFlagIsInTheGame(false);
+                    std::cout << "--BUSTED!-- \n";
+                    player.getHands()[i].printHand();
                 }
             }
         }
     }
+    // after all player hands have been played out, the dealer needs to play out his hand
+    // dealer first reveals wholecard (print hand function without hiding) and then hits until he reaches a value of greater than 17
+    std::cout << "--Dealer turn--\n";
+    std::cout << "Dealer: ";  d.getHand().printHand();
+    while (d.getHand().getValue() < 17 or (d.getHand().getValue() == 17 and d.getHand().isSoft())) { 
+        // as long as dealer is below 16 OR if on 17 AND soft he must hit(H17 rules)
+        d.getHand().addCard(shoe.deal());
+        std::cout << "Dealer hit hand: "; d.getHand().printHand();
+    }
+    // dealer hand determined
+    // all hands have been played, start evaluating results now
+    // // after setting the bet, the wagered amount is instantly subtracted from the balance. THe idea being that its no longer in the account, its on the table
+    // if he loses, he loses the bet. 
+    // if he pushes, bet is returned
+    // if he wins, he gets his bet back twice
+    // if he has blackjack with 2 cards(starting blackjack) he gets his bet back plus a special payout ratio determined in the gamerules
+    for (Player& player : players) {
+        for (size_t i = 0; i < player.getHands().size(); ++i) { // loop all hands
+            // loop all hands without exception and determine the payout based on dealer hand and player hand
+            // also include sidebet payouts
+            Hand& hand = player.getHands()[i];
+            // if we busted we always lose
+            // if we didnt bust: If we have higher value than dealer we win, if we have same we push, if we dont we lose
+            // special: If we have a 21 and exactly 2 cards we have a blackjack: return base bet + Payout 3:2 or 1:1 if even moeny was taken.
 
+            if (d.getHand().getValue() == 21 and d.getHand().getCardsCount() == 2) { 
+                // dealer has blackjack, payout insurance sidebets
+                int payout = hand.getSideBet("insurance") * 2;
+            }
+
+            if (hand.getValue() > 21) {
+                // we lose
+            }
+            else if (hand.getValue() == 21 and hand.getCardsCount() == 2 and player.getHands().size() == 1) { // this is a true blackjack
+                if (hand.getFlagEvenMoney()) {
+                    // we have true blackjack with even money, return bet twice because of the 1:1 payout
+                }
+                else {
+                    // we have true blackjack without even money, compare with dealer value to determine payout(push or blackjack)
+                    if (d.getHand().getValue() == 21) {
+                        // push
+                    }
+                    else {
+                        // BLACKJACK
+
+                    }
+                }
+            }
+            else if (hand.getValue() > d.getHand().getValue()) {
+                // win
+            }
+            else if (hand.getValue() == d.getHand().getValue()) {
+                // push
+            }
+            else if (hand.getValue() < d.getHand().getValue()) {
+                // lose
+            }
+        }
+    }
     return 0;
 }
