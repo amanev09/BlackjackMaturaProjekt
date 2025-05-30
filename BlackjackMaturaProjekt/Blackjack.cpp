@@ -39,8 +39,10 @@ class Hand {
     std::vector<Card> cards; // cards in hand
     double bet = 0; // bet is specific to each hand, not player
     bool flagIsInTheGame = true; // is the hand still in the game and therefore needs to be prompted for actions?
-    bool flagIsHandResolved = false; // has the hand already been resolved? If not, we need to resolve it at the end of the game.
+    bool flagIsHandResolved = false; // has the hand already been resolved? If not, we need to resolve it at the end of the game. Important for surrender
     bool flagEvenMoney = false; // did the player take even money for this hand
+    bool flagSurrendered = false; // did the player surrender the hand
+    bool flagIsSplitHand = false; // is this hand the result of splitting a previous hand
     std::unordered_map<std::string, double> sideBets; // dictionary for the sidebet and respective bet amount. includes but not limited to insurance, even money
 public:
     void addCard(const Card& card) {
@@ -66,6 +68,10 @@ public:
     void setFlagIsHandResolved(bool flag) { flagIsHandResolved = flag; }
     void setFlagEvenMoney(bool flag) { flagEvenMoney = flag; }
     bool getFlagEvenMoney() const noexcept { return flagEvenMoney; }
+    void setFlagSurrendered(bool flag) { flagSurrendered = flag; }
+    bool getFlagSurrendered() const noexcept { return flagSurrendered; }
+    void setFlagIsSplitHand(bool flag) { flagIsSplitHand = flag; }
+    bool getFlagIsSplitHand() const noexcept { return flagIsSplitHand; }
 
     void setSideBet(const std::string& betName, double amount) {
         sideBets[betName] = amount;
@@ -261,9 +267,21 @@ public:
 
 struct GameRules {
     int deckCount = 1;
-    int maxSplitHands = -1; // infinite
+    int maxSplitHands = 1000000; // infinite
+    double blackjackPayoutRatio = 3 / 2;
     bool doubleAfterSplit = true;
-
+    bool soft17 = false; // false means h17
+    bool peakAmericanStyle = true; // otherwise european style, dealer doesnt peak at all until after all player actions are over
+    bool earlySurrenderAllowed = false;
+    bool lateSurrenderAllowed = true;
+    bool insuranceAllowed = true;
+    bool evenMoneyAllowed = true;
+    bool resplitAcesAllowed = true;
+    bool hitSplitAcesAllowed = true;
+    bool doubleDownAlwaysAllowed = true; 
+    std::vector<int> doubleDownOnCardValues; // only needed when doubleDownAlwaysAllowed = false
+    double minBet = 0;
+    double maxBet = 100;
 };
 
 int main()
@@ -275,7 +293,7 @@ int main()
     Player p("Nevio");
     players.push_back(p);
     Dealer d;
-    Shoe shoe(1);
+    Shoe shoe(r.deckCount);
     shoe.shuffle();
 
     // ask for bet(s) and set via setBet
@@ -291,10 +309,15 @@ int main()
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
                     std::cout << "Invalid input! Please enter a number.\n";
                 }
-                else if (bet <= 0) {
+                else if (bet < r.minBet) {
                     std::cin.clear(); // Clear error flags
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                    std::cout << "Invalid input! Please enter a number greater than 0.\n";
+                    std::cout << "Invalid input! Please enter a number greater than "<<r.minBet<<std::endl;
+                }
+                else if (bet > r.maxBet) {
+                    std::cin.clear(); // Clear error flags
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
+                    std::cout << "Invalid input! Please enter a number smaller than " << r.maxBet << std::endl;
                 }
                 else if (player.getBalance()<bet) {
                     std::cin.clear(); // Clear error flags
@@ -308,21 +331,59 @@ int main()
             }
                 hand.setBet(bet); // set the hands bet
                 player.setBalance(player.getBalance() - bet); // remove bet from balance
-            }
+        }
     }
 
     // first all players get 1 card, then dealer gets 1 card, then all players second card, then dealer second card(hole card which is hidden)
-    for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
-
-        players[i].addCard(shoe.deal()); // removes from shoe, adds to player
+    for (Player& player : players) {
+        for (Hand& hand : player.getHands()) {
+            hand.addCard(shoe.deal());
+        }
     }
 
     d.addCard(shoe.deal());
-    for (int i = 0; i < players.size(); ++i) { // add 2 cards to all players, then dealer.
-
-        players[i].addCard(shoe.deal()); // removes from shoe, adds to player
+    for (Player& player : players) {
+        for (Hand& hand : player.getHands()) {
+            hand.addCard(shoe.deal());
+        }
     }
     d.addCard(shoe.deal());
+
+    // before we start with pregame checks, offer early surrender if allowed
+
+    if (r.earlySurrenderAllowed) {
+        for (Player& player : players) {
+            for (size_t i = 0; i < player.getHands().size(); ++i) {
+                char choice = 'f';
+                // ask every player if they want to surrender any one of their hands
+                // print situation first (dealer hand and then player hand)
+                std::cout << "\nDealer: ";
+                d.printStartingHand(); std::cout << std::endl;
+                std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
+                std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
+                player.getHands()[i].printHand();
+                // after printing situation, ask if he wants to surrender the hand
+                while (choice != 'y' && choice != 'n') {
+                    std::cout << "Do you want to surrender(y/n): ";
+                    std::cin >> choice;
+                    if (choice != 'y' && choice != 'n') {
+                        std::cout << "Invalid, please enter a valid choice!\n";
+                    }
+                }
+
+                if (choice == 'y') {
+                    // even money was taken, set flag for later use in determining payout
+                    player.getHands()[i].setFlagSurrendered(true);
+                    player.getHands()[i].setFlagIsInTheGame(false);
+                    choice = 'f';
+                }
+                else if (choice == 'n') {
+                    // dont do anything
+                    choice = 'f';
+                }
+            }
+        }
+    }
 
     // start with pregame checks now
     // 
@@ -337,12 +398,12 @@ int main()
 
     bool flagRoundEnd = false;
 
-    if (d.getUpCard().getRank() == 'A' and not flagRoundEnd) { // dealer has ace upcard, offer insurance and if necessary even money
-
+    if (d.getUpCard().getRank() == 'A' and not flagRoundEnd and r.peakAmericanStyle) { 
+        // dealer has ace upcard, offer insurance and if necessary even money
         for (Player& player : players) { // loop through every player
             for (Hand& hand : player.getHands()) {
                 char choice = 'f';
-                if (hand.getValue() == 21) { // player has blackjack, offer even money and disable the hand
+                if (hand.getValue() == 21 && r.evenMoneyAllowed) { // player has blackjack, offer even money and disable the hand
                     hand.setFlagIsInTheGame(false);
                     while (choice != 'y' && choice != 'n') {
                         std::cout << "Do you want even money(y/n): ";
@@ -363,7 +424,7 @@ int main()
                     }
                 }
                 else { // player doesnt have blackjack, offer insurance(sidebet)
-                    while (choice != 'y' && choice != 'n') {
+                    while (choice != 'y' && choice != 'n' && r.insuranceAllowed) {
                         std::cout << "Do you want insurance(y/n): ";
                         std::cin >> choice;
                         if (choice != 'y' && choice != 'n') {
@@ -394,13 +455,15 @@ int main()
         }
 
     }
-    else if (d.getUpCard().getValue() == 10 and not flagRoundEnd and d.getHand().getValue() == 21) { // game not ended yet, continue with checks
+    else if (d.getUpCard().getValue() == 10 and not flagRoundEnd and d.getHand().getValue() == 21 && r.peakAmericanStyle) { // game not ended yet, continue with checks
 
         // check for dealer blackjack and dont offer any sidebets. If dealer has 10+A round ends immediately always.
         flagRoundEnd = true;
     }
 
     // pregame checks over
+    
+
     if (flagRoundEnd) {
         for (Player& player : players) {
             for (Hand& hand : player.getHands()) {
@@ -408,14 +471,51 @@ int main()
             }
         }
     }
+
+    // after the dealer has checked for blackjack, offer late surrender if allowed to all hands that are still in the game
+
     // loop through all hands that havent been played yet, ask the owner of the hand what to do.
     for (Player& player : players) { // loop all players
         for (size_t i = 0; i < player.getHands().size(); ++i) { // loop all hands of a player
             // check and perform a hand.
-            
+            int j = 0;
             while (player.getHands()[i].getFlagIsInTheGame()) {
+                j += 1;
                 // hand still in the game
                 // ask the owner what to do
+
+                // start by asking if he wants to surrender the hand
+                if (r.lateSurrenderAllowed && j == 1) { // dont reoffer surrender if we are not on first iteration
+                    char choice = 'f';
+                    // ask every player if they want to surrender any one of their hands
+                    // print situation first (dealer hand and then player hand)
+                    std::cout << "\nDealer: ";
+                    d.printStartingHand(); std::cout << std::endl;
+                    std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
+                    std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
+                    player.getHands()[i].printHand();
+                    // after printing situation, ask if he wants to surrender the hand
+                    while (choice != 'y' && choice != 'n') {
+                        std::cout << "Do you want to surrender(y/n): ";
+                        std::cin >> choice;
+                        if (choice != 'y' && choice != 'n') {
+                            std::cout << "Invalid, please enter a valid choice!\n";
+                        }
+                    }
+
+                    if (choice == 'y') {
+                        // even money was taken, set flag for later use in determining payout
+                        player.getHands()[i].setFlagSurrendered(true);
+                        player.getHands()[i].setFlagIsInTheGame(false);
+                        choice = 'f';
+                        break;
+                    }
+                    else if (choice == 'n') {
+                        // dont do anything
+                        choice = 'f';
+                    }
+                }
+
                 std::cout << "\nDealer: ";
                 d.printStartingHand(); std::cout << std::endl;
                 std::cout << player.getName() << "'s balance: " << player.getBalance()<<std::endl;
@@ -426,16 +526,47 @@ int main()
                 // determine which actions are allowed, prompt the player with the allowed actions, reject any non-legal action
                 //hitting always allowed, standing always allowed, double allowed based on rules, splitting allowed when same pair AND rules
                 std::vector<char> allowedChoices;
-                allowedChoices.push_back('h'); allowedChoices.push_back('s'); // these are always allowed
+                allowedChoices.push_back('s'); // these are always allowed
+                if (not(player.getHands()[i].getFlagIsSplitHand() and player.getHands()[i].getCard(0).getRank() == 'A' and not r.hitSplitAcesAllowed)) {
+                    // the hand is a split resulting from a previous hand with 2 aces, only allow hitting when rules allow it
+                    allowedChoices.push_back('h');
+                }
                 // double allowed anytime on the first 2 cards of a hand. SO if a hand has exactly 2 cards, double down is allowed
                 // additional check to ensure player has the balance necessary to double down
+                // additional check with rules
                 if (player.getHands()[i].getCardsCount() == 2 && player.getBalance()>=player.getHands()[i].getBet()) {
-                    // hand has exactly 2 cards, double is allowed.
-                    allowedChoices.push_back('d');
-                    // also if we are on two cards, check if cards are the same, splitting would also be allowed
-                    if (player.getHands()[i].getCard(0).getRank() == player.getHands()[i].getCard(1).getRank()) {
-                        // splitting allowed
-                        allowedChoices.push_back('p');
+
+                    if (r.doubleDownAlwaysAllowed) {
+                        if (r.doubleAfterSplit) {
+                            // always allowed
+                            allowedChoices.push_back('d');
+                        }
+                        else if (not player.getHands()[i].getFlagIsSplitHand()) {
+                            // only allowed when the hand is NOT a split hand
+                            allowedChoices.push_back('d');
+                        }
+                    }
+                    else if(std::find(r.doubleDownOnCardValues.begin(), r.doubleDownOnCardValues.end(), 
+                        player.getHands()[i].getValue()) != r.doubleDownOnCardValues.end()){ // searches the vector for the current hand value
+                        // if doubling is not always allowed, check if the current value is in the array of allowed double values.
+                        if (r.doubleAfterSplit) {
+                            // always allowed
+                            allowedChoices.push_back('d');
+                        }
+                        else if (not player.getHands()[i].getFlagIsSplitHand()) {
+                            // only allowed when the hand is NOT a split hand
+                            allowedChoices.push_back('d');
+                        }
+                    }
+                    // also if we are on two cards, if cards are the same, splitting would also be allowed
+                    // check that the amount of hands the player has does not surpas the max split limit
+                    // if resplitting aces is not allowed, prohibit splitting when both cards are aces and the hand has flag isSplitHand
+                    if (player.getHands()[i].getCard(0).getRank() == player.getHands()[i].getCard(1).getRank() 
+                        and player.getHands().size()<=r.maxSplitHands) {
+                        if (not(player.getHands()[i].getCard(0).getRank() == 'A' and player.getHands()[i].getFlagIsSplitHand() and not r.resplitAcesAllowed)) {
+                            // only when both cards are Aces and the hand is a split hand already and resplitting aces is prohibited will this not run
+                            allowedChoices.push_back('p');
+                        }
                     }
                 }
                 // legal actions determined and safed in allowedChoices vector
@@ -482,6 +613,9 @@ int main()
                     // remove the second card of the hand, create a new hand object and add that card, then deal 2 new cards
                     player.addHand(); // we have hand and hand2 to work with
                     
+                    player.getHands()[i].setFlagIsSplitHand(true);
+                    player.getHands()[i+1].setFlagIsSplitHand(true);
+
                     player.getHands()[i+1].addCard(player.getHands()[i].removeCard(1)); // remove it and add it to the other hand, then redeal new cards to those hands
                     player.getHands()[i].addCard(shoe.deal());
                     player.getHands()[i+1].addCard(shoe.deal());
@@ -503,8 +637,8 @@ int main()
     // dealer first reveals wholecard (print hand function without hiding) and then hits until he reaches a value of greater than 17
     std::cout << "\n--Dealer turn--\n";
     std::cout << "Dealer: ";  d.getHand().printHand();
-    while (d.getHand().getValue() < 17 or (d.getHand().getValue() == 17 and d.getHand().isSoft())) { 
-        // as long as dealer is below 16 OR if on 17 AND soft he must hit(H17 rules)
+    while (d.getHand().getValue() < 17 or (d.getHand().getValue() == 17 and d.getHand().isSoft() and not r.soft17)) { // soft17 = false means h17 rules so hitting
+        // as long as dealer is below 16 OR if on 17 AND soft he must hit(depending on rules)
         d.getHand().addCard(shoe.deal());
         std::cout << "Dealer hit hand: "; d.getHand().printHand();
     }
@@ -528,13 +662,19 @@ int main()
             if (d.getHand().getValue() == 21 and d.getHand().getCardsCount() == 2 && player.getHands()[i].getSideBet("insurance")) {
                 // dealer has blackjack, payout insurance sidebets
                 // only runs if insurance sidebet was greater than 0
-                double payout = hand.getSideBet("insurance") * 2;
+                double payout = hand.getSideBet("insurance") * 2; // this is only the insurance payout, real hand comes later
                 std::cout << "Dealer had blackjack, " << player.getName() << "'s hand " << i + 1 << " insurance payout: " << payout<<"\n";
                 player.setBalance(player.getBalance() + payout);
                 
             }
+            // sidebet resolution over
 
-            if (hand.getValue() > 21) {
+            if (hand.getFlagSurrendered()) { // we surrendered the hand, return bet/2
+                double payout = hand.getBet() / 2;
+                std::cout << player.getName() << "'s hand " << i + 1 << " had surrendered, payout: " << payout << "\n";
+                player.setBalance(player.getBalance() + payout);
+            } 
+            else if (hand.getValue() > 21) {
                 // we lose
                 double payout = 0;
                 std::cout << player.getName() << "'s hand " << i + 1 << " lost, payout: " << payout<<"\n";
@@ -557,7 +697,7 @@ int main()
                     }
                     else {
                         // BLACKJACK
-                        double payout = hand.getBet() +hand.getBet()*3/2;
+                        double payout = hand.getBet() +hand.getBet()*r.blackjackPayoutRatio;
                         std::cout << player.getName() << "'s hand " << i + 1 << " wins blackjack, payout: " << payout << "\n";
                         player.setBalance(player.getBalance() + payout);
                     }
