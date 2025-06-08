@@ -1,7 +1,7 @@
 #pragma once
 
 struct GameRules {
-    int deckCount = 1;
+    int deckCount = 2;
     int maxSplitHands = 1000000; // infinite
     double blackjackPayoutRatio = 3.0 / 2.0;
     bool doubleAfterSplit = true;

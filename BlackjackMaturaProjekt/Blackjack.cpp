@@ -31,13 +31,12 @@ int main()
         {"dealer1", Card('Q', 'S')}
         
     };
-    shoe.removeCard('2', 'S');
-    shoe.removeCard('2', 'H');
-    shoe.removeCard('Q', 'S');
 
     double preBank = players[0].getBalance();
     int iterations = 100000;
     for (int i = 0; i < iterations; ++i) {
+        shoe.reset();
+        shoe.shuffle();
         blackJack(r, players, d, shoe, &inputMap, &startingCards);
     }
     double postBank = players[0].getBalance();

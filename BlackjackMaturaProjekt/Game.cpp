@@ -19,7 +19,9 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
         };
     auto getStarterCard = [&](const std::string& promptKey) -> Card {
         if (startingCards && startingCards->count(promptKey)) {
-            return startingCards->at(promptKey); // returns the card that was given as an argument
+            Card c = startingCards->at(promptKey);
+            shoe.removeCard(c.getRank(), c.getSuit());   // adjust shoe
+            return c;
         }
         else {
             return shoe.deal(); // if we dont have a card assigned, just deal like normal

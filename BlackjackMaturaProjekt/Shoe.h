@@ -5,6 +5,7 @@
 class Shoe {
     std::vector<Card> cards; // Holds all cards in shoe
     int deckSize;
+    std::mt19937 rng;
 public:
     Shoe(int size = 1);
 

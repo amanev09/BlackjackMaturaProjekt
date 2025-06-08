@@ -3,16 +3,14 @@
 
 #include "Shoe.h"
 
-Shoe::Shoe(int size) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
-    deckSize = size;
+Shoe::Shoe(int size) : deckSize(size), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
     reset();
 }
 
 // Shuffles deck using random number generator
 void Shoe::shuffle() {
-    std::random_device rd;              // Random seed
-    std::mt19937 g(rd());               // Random number generator
-    std::shuffle(cards.begin(), cards.end(), g); // Shuffle the deck
+
+    std::shuffle(cards.begin(), cards.end(), rng); // Shuffle the deck
 }
 
 void Shoe::reset() {
