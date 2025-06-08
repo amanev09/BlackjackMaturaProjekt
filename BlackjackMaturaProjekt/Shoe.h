@@ -16,6 +16,8 @@ public:
 
     Card deal();
 
+    void removeCard(char rank, char suit);
+
     // Prints the current cards in the deck to the console
     void printDeck() const;
 };

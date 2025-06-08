@@ -29,11 +29,20 @@ void Shoe::reset() {
     shuffle();
 }
 
+void Shoe::removeCard(char rank, char suit) {
+    for (auto it = cards.begin(); it != cards.end(); ++it) {
+        if (it->getRank() == rank && it->getSuit() == suit) {
+            cards.erase(it);
+            return; // remove only first matching card
+        }
+    }
+}
+
 
 Card Shoe::deal() {
     if (cards.empty()) {
         reset();
-        std::cout << "Shuffeled Deck!";
+        //std::cout << "Shuffeled Deck!";
     }
     Card dealtCard = cards.back();
     cards.pop_back();
@@ -43,7 +52,7 @@ Card Shoe::deal() {
 // Prints the current cards in the deck to the console
 void Shoe::printDeck() const {
     for (const auto& card : cards) {
-        std::cout << card.toString() << " ";
+        //std::cout << card.toString() << " ";
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
 }

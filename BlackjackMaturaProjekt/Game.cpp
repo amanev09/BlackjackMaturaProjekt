@@ -8,7 +8,7 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
 
     auto getInput = [&](const std::string& promptKey) -> std::string {
         if (inputChoices && inputChoices->count(promptKey)) {
-            std::cout << inputChoices->at(promptKey)<<std::endl;
+            //std::cout << inputChoices->at(promptKey)<<std::endl;
             return inputChoices->at(promptKey);
         }
         else {
@@ -30,7 +30,7 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
     for (Player& player : players) {
         int amount;
         while (true) {
-            std::cout << "How many hands do you want to play with (max " << r.maxSplitHands << "): ";
+            //std::cout << "How many hands do you want to play with (max " << r.maxSplitHands << "): ";
 
             std::string input = getInput("numHands");
             amount = std::stoi(input);
@@ -38,12 +38,12 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
             if (std::cin.fail()) {
                 std::cin.clear(); // Clear error flags
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                std::cout << "Invalid input! Please enter a number.\n";
+                //std::cout << "Invalid input! Please enter a number.\n";
             }
             else if (amount <= 0 || amount > r.maxSplitHands) {
                 std::cin.clear(); // Clear error flags
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                std::cout << "Invalid input! Please enter an integer in the allowed range.\n";
+                //std::cout << "Invalid input! Please enter an integer in the allowed range.\n";
             }
             else {
                 break; // valid input
@@ -61,30 +61,30 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
             Hand& hand = player.getHands()[i];
             double bet;
             while (true) {
-                std::cout << player.getName() << "'s hand " << i + 1 << " Bet: ";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " Bet: ";
                 std::string input = getInput("bet");
                 bet = std::stod(input);
 
                 if (std::cin.fail()) {
                     std::cin.clear(); // Clear error flags
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                    std::cout << "Invalid input! Please enter a number.\n";
+                    //std::cout << "Invalid input! Please enter a number.\n";
                 }
                 else if (bet < r.minBet) {
                     std::cin.clear(); // Clear error flags
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                    std::cout << "Invalid input! Please enter a number greater than " << r.minBet << std::endl;
+                    //std::cout << "Invalid input! Please enter a number greater than " << r.minBet << std::endl;
                 }
                 else if (bet > r.maxBet) {
                     std::cin.clear(); // Clear error flags
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                    std::cout << "Invalid input! Please enter a number smaller than " << r.maxBet << std::endl;
+                    //std::cout << "Invalid input! Please enter a number smaller than " << r.maxBet << std::endl;
                 }
                 else if (player.getBalance() < bet) {
                     std::cin.clear(); // Clear error flags
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
-                    std::cout << "Balance too low, please lower your bet!";
-                    std::cout << " Your balance is: " << player.getBalance() << std::endl;
+                    //std::cout << "Balance too low, please lower your bet!";
+                    //std::cout << " Your balance is: " << player.getBalance() << std::endl;
                 }
                 else {
                     break; // Valid number entered
@@ -118,18 +118,18 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                 char choice = 'f';
                 // ask every player if they want to surrender any one of their hands
                 // print situation first (dealer hand and then player hand)
-                std::cout << "\nDealer: ";
-                d.printStartingHand(); std::cout << std::endl;
-                std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
-                std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
+                //std::cout << "\nDealer: ";
+                d.printStartingHand(); //std::cout << std::endl;
+                //std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
+                //std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
                 player.getHands()[i].printHand();
                 // after printing situation, ask if he wants to surrender the hand
                 while (choice != 'y' && choice != 'n') {
-                    std::cout << "Do you want to surrender(y/n): ";
+                    //std::cout << "Do you want to surrender(y/n): ";
                     std::string input = getInput("earlySurrender");
                     choice = input[0];
                     if (choice != 'y' && choice != 'n') {
-                        std::cout << "Invalid, please enter a valid choice!\n";
+                        //std::cout << "Invalid, please enter a valid choice!\n";
                     }
                 }
 
@@ -168,13 +168,13 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                 if (hand.getValue() == 21 && r.evenMoneyAllowed) { // player has blackjack, offer even money and disable the hand
                     hand.setFlagIsInTheGame(false);
                     while (choice != 'y' && choice != 'n') {
-                        std::cout << "Do you want even money(y/n): ";
+                        //std::cout << "Do you want even money(y/n): ";
 
                         std::string input = getInput("evenMoney");
                         choice = input[0];
 
                         if (choice != 'y' && choice != 'n') {
-                            std::cout << "Invalid, please enter a valid choice!\n";
+                            //std::cout << "Invalid, please enter a valid choice!\n";
                         }
                     }
 
@@ -190,16 +190,16 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                 }
                 else { // player doesnt have blackjack, offer insurance(sidebet)
                     while (choice != 'y' && choice != 'n' && r.insuranceAllowed) {
-                        std::cout << "Do you want insurance(y/n): ";
+                        //std::cout << "Do you want insurance(y/n): ";
 
                         std::string input = getInput("insurance");
                         choice = input[0];
 
                         if (choice != 'y' && choice != 'n') {
-                            std::cout << "Invalid, please enter a valid choice!\n";
+                            //std::cout << "Invalid, please enter a valid choice!\n";
                         }
                         else if (choice == 'y' && player.getBalance() < hand.getBet() / 2) { // player doesnt have enough money for insurance sidebet
-                            std::cout << "Invalid, balance not high enough!";
+                            //std::cout << "Invalid, balance not high enough!";
                             choice = 'f'; // in order to force player to choose n
                         }
                     }
@@ -264,18 +264,18 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                     char choice = 'f';
                     // ask every player if they want to surrender any one of their hands
                     // print situation first (dealer hand and then player hand)
-                    std::cout << "\nDealer: ";
-                    d.printStartingHand(); std::cout << std::endl;
-                    std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
-                    std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
+                    //std::cout << "\nDealer: ";
+                    d.printStartingHand(); //std::cout << std::endl;
+                    //std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
+                    //std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
                     player.getHands()[i].printHand();
                     // after printing situation, ask if he wants to surrender the hand
                     while (choice != 'y' && choice != 'n') {
-                        std::cout << "Do you want to surrender(y/n): ";
+                        //std::cout << "Do you want to surrender(y/n): ";
                         std::string input = getInput("lateSurrender");
                         choice = input[0];
                         if (choice != 'y' && choice != 'n') {
-                            std::cout << "Invalid, please enter a valid choice!\n";
+                            //std::cout << "Invalid, please enter a valid choice!\n";
                         }
                     }
 
@@ -292,10 +292,10 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                     }
                 }
 
-                std::cout << "\nDealer: ";
-                d.printStartingHand(); std::cout << std::endl;
-                std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
-                std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
+                //std::cout << "\nDealer: ";
+                d.printStartingHand(); //std::cout << std::endl;
+                //std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
+                //std::cout << "" << player.getName() << "'s hand " << i + 1 << ": ";
                 player.getHands()[i].printHand();
 
 
@@ -348,28 +348,28 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                 // legal actions determined and safed in allowedChoices vector
                 char choice = 'f';
                 while (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
-                    std::cout << "Available actions: ";
+                    //std::cout << "Available actions: ";
                     for (char action : allowedChoices) {
                         switch (action) {
-                        case 'h': std::cout << "Hit (h) "; 
+                        case 'h': //std::cout << "Hit (h) "; 
                             break;
-                        case 's': std::cout << "Stand (s) "; 
+                        case 's': //std::cout << "Stand (s) "; 
                             break;
-                        case 'd': std::cout << "Double (d) "; 
+                        case 'd': //std::cout << "Double (d) "; 
                             break;
-                        case 'p': std::cout << "Split (p) "; 
+                        case 'p': //std::cout << "Split (p) "; 
                             break;
 
-                        default: std::cout << action << " "; 
+                        default: //std::cout << action << " "; 
                             break;
                         }
                     }
-                    std::cout << std::endl << "Choice: ";
+                    //std::cout << std::endl << "Choice: ";
 
                     std::string input = getInput("firstChoice");
                     choice = input[0];
                     if (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
-                        std::cout << "Invalid choice!" << std::endl;
+                        //std::cout << "Invalid choice!" << std::endl;
                     }
                 }
                 // we now have a legal choice. Execute that choice now.
@@ -387,9 +387,9 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                     player.getHands()[i].addCard(shoe.deal());
                     player.setBalance(player.getBalance() - player.getHands()[i].getBet() / 2);
                     player.getHands()[i].setFlagIsInTheGame(false);
-                    std::cout << player.getName() << "'s hand " << i + 1 << ": ";
+                    //std::cout << player.getName() << "'s hand " << i + 1 << ": ";
                     player.getHands()[i].printHand();
-                    std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
+                    //std::cout << player.getName() << "'s balance: " << player.getBalance() << std::endl;
                 }
                 else if (choice == 'p') {
                     // remove the second card of the hand, create a new hand object and add that card, then deal 2 new cards
@@ -409,8 +409,8 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                 // after the choice is executed, check if we busted or not, if we did we need to disable the hand 
                 if (player.getHands()[i].getValue() > 21) { // only > not >= because you could still technically hit a hand with value 21 (except on starting hand)
                     player.getHands()[i].setFlagIsInTheGame(false);
-                    std::cout << "--BUSTED!-- \n";
-                    std::cout << player.getName() << "'s hand " << i + 1 << ": ";
+                    //std::cout << "--BUSTED!-- \n";
+                    //std::cout << player.getName() << "'s hand " << i + 1 << ": ";
                     player.getHands()[i].printHand();
                 }
             }
@@ -418,14 +418,14 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
     }
     // after all player hands have been played out, the dealer needs to play out his hand
     // dealer first reveals wholecard (print hand function without hiding) and then hits until he reaches a value of greater than 17
-    std::cout << "\n--Dealer turn--\n";
-    std::cout << "Dealer: ";  d.getHand().printHand();
+    //std::cout << "\n--Dealer turn--\n";
+    //std::cout << "Dealer: ";  d.getHand().printHand();
     while (d.getHand().getValue() < 17 or (d.getHand().getValue() == 17 and d.getHand().isSoft() and not r.soft17)) { // soft17 = false means h17 rules so hitting
         // as long as dealer is below 16 OR if on 17 AND soft he must hit(depending on rules)
         d.getHand().addCard(shoe.deal());
-        std::cout << "Dealer hit hand: "; d.getHand().printHand();
+        //std::cout << "Dealer hit hand: "; d.getHand().printHand();
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
     // dealer hand determined
     // all hands have been played, start evaluating results now
     // // after setting the bet, the wagered amount is instantly subtracted from the balance. THe idea being that its no longer in the account, its on the table
@@ -446,7 +446,7 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                 // dealer has blackjack, payout insurance sidebets
                 // only runs if insurance sidebet was greater than 0
                 double payout = hand.getSideBet("insurance") * 2; // this is only the insurance payout, real hand comes later
-                std::cout << "Dealer had blackjack, " << player.getName() << "'s hand " << i + 1 << " insurance payout: " << payout << "\n";
+                //std::cout << "Dealer had blackjack, " << player.getName() << "'s hand " << i + 1 << " insurance payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
 
             }
@@ -454,20 +454,20 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
 
             if (hand.getFlagSurrendered()) { // we surrendered the hand, return bet/2
                 double payout = hand.getBet() / 2;
-                std::cout << player.getName() << "'s hand " << i + 1 << " had surrendered, payout: " << payout << "\n";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " had surrendered, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
             }
             else if (hand.getValue() > 21) {
                 // we lose
                 double payout = 0;
-                std::cout << player.getName() << "'s hand " << i + 1 << " lost, payout: " << payout << "\n";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " lost, payout: " << payout << "\n";
 
             }
-            else if (hand.getValue() == 21 and hand.getCardsCount() == 2 and player.getHands().size() == 1) { // this is a true blackjack
+            else if (hand.getValue() == 21 and hand.getCardsCount() == 2) { // this is a true blackjack
                 if (hand.getFlagEvenMoney()) {
                     // we have true blackjack with even money, return bet twice because of the 1:1 payout
                     double payout = hand.getBet() * 2;
-                    std::cout << player.getName() << "'s hand " << i + 1 << " had even money, payout: " << payout << "\n";
+                    //std::cout << player.getName() << "'s hand " << i + 1 << " had even money, payout: " << payout << "\n";
                     player.setBalance(player.getBalance() + payout);
                 }
                 else {
@@ -475,13 +475,13 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                     if (d.getHand().getValue() == 21) {
                         // push
                         double payout = hand.getBet();
-                        std::cout << player.getName() << "'s hand " << i + 1 << " pushes blackjack, payout: " << payout << "\n";
+                        //std::cout << player.getName() << "'s hand " << i + 1 << " pushes blackjack, payout: " << payout << "\n";
                         player.setBalance(player.getBalance() + payout);
                     }
                     else {
                         // BLACKJACK
                         double payout = hand.getBet() + hand.getBet() * r.blackjackPayoutRatio;
-                        std::cout << player.getName() << "'s hand " << i + 1 << " wins blackjack, payout: " << payout << "\n";
+                        //std::cout << player.getName() << "'s hand " << i + 1 << " wins blackjack, payout: " << payout << "\n";
                         player.setBalance(player.getBalance() + payout);
                     }
                 }
@@ -489,29 +489,29 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
             else if (hand.getValue() <= 21 and d.getHand().getValue() > 21) {
                 // win
                 double payout = hand.getBet() * 2;
-                std::cout << player.getName() << "'s hand " << i + 1 << " wins, payout: " << payout << "\n";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " wins, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
             }
             else if (hand.getValue() > d.getHand().getValue()) {
                 // win
                 double payout = hand.getBet() * 2;
-                std::cout << player.getName() << "'s hand " << i + 1 << " wins, payout: " << payout << "\n";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " wins, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
             }
             else if (hand.getValue() == d.getHand().getValue()) {
                 // push
                 double payout = hand.getBet();
-                std::cout << player.getName() << "'s hand " << i + 1 << " pushes, payout: " << payout << "\n";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " pushes, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
             }
             else if (hand.getValue() < d.getHand().getValue()) {
                 // lose
                 double payout = 0;
-                std::cout << player.getName() << "'s hand " << i + 1 << " loses, payout: " << payout << "\n";
+                //std::cout << player.getName() << "'s hand " << i + 1 << " loses, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
             }
         }
-        std::cout << player.getName() << "'s new balance: " << player.getBalance() << "\n";
+        //std::cout << player.getName() << "'s new balance: " << player.getBalance() << "\n";
 
 
     }

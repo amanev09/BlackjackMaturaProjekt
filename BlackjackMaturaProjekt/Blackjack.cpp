@@ -8,7 +8,7 @@
 
 int main()
 {
-    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
 
     std::vector<Player> players;
     GameRules r;
@@ -27,12 +27,16 @@ int main()
     };
     std::unordered_map<std::string, Card> startingCards = {
         {"player1", Card('2', 'S')},
-        {"player2", Card('2', 'S')},
+        {"player2", Card('2', 'H')},
         {"dealer1", Card('Q', 'S')}
         
     };
+    shoe.removeCard('2', 'S');
+    shoe.removeCard('2', 'H');
+    shoe.removeCard('Q', 'S');
+
     double preBank = players[0].getBalance();
-    int iterations = 1000;
+    int iterations = 100000;
     for (int i = 0; i < iterations; ++i) {
         blackJack(r, players, d, shoe, &inputMap, &startingCards);
     }
