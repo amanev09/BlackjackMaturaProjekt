@@ -20,5 +20,5 @@ public:
     void removeCard(char rank, char suit);
 
     // Prints the current cards in the deck to the console
-    void printDeck() const;
+    void printShoe() const;
 };
