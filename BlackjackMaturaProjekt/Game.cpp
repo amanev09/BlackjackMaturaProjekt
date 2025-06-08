@@ -1,17 +1,28 @@
 #include "Game.h"
 
+    
 
-void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices) {
+void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices,
+    std::unordered_map<std::string, Card>* startingCards) {
     // plays one round of blackjack using certain rules for all players on the table
 
     auto getInput = [&](const std::string& promptKey) -> std::string {
         if (inputChoices && inputChoices->count(promptKey)) {
+            std::cout << inputChoices->at(promptKey)<<std::endl;
             return inputChoices->at(promptKey);
         }
         else {
             std::string choice;
             std::cin >> choice;
             return choice;
+        }
+        };
+    auto getStarterCard = [&](const std::string& promptKey) -> Card {
+        if (startingCards && startingCards->count(promptKey)) {
+            return startingCards->at(promptKey); // returns the card that was given as an argument
+        }
+        else {
+            return shoe.deal(); // if we dont have a card assigned, just deal like normal
         }
         };
 
@@ -87,14 +98,14 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
     // first all players get 1 card, then dealer gets 1 card, then all players second card, then dealer second card(hole card which is hidden)
     for (Player& player : players) {
         for (Hand& hand : player.getHands()) {
-            hand.addCard(Card('A', 'S'));
+            hand.addCard(getStarterCard("player1"));
         }
     }
 
-    d.addCard(shoe.deal());
+    d.addCard(getStarterCard("dealer1"));
     for (Player& player : players) {
         for (Hand& hand : player.getHands()) {
-            hand.addCard(Card('A', 'S'));
+            hand.addCard(getStarterCard("player2"));
         }
     }
     d.addCard(shoe.deal());
@@ -217,7 +228,14 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
         // check for dealer blackjack and dont offer any sidebets. If dealer has 10+A round ends immediately always.
         flagRoundEnd = true;
     }
-
+    for (Player& player : players) {
+        for (Hand& hand : player.getHands()) {
+            if (hand.getValue() == 21 and hand.getCardsCount() == 2) {
+                // true blackjack even if dealer does not resolve means hand gets disabled
+                hand.setFlagIsInTheGame(false);
+            }
+        }
+    }
     // pregame checks over
 
 
@@ -333,12 +351,17 @@ void blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe
                     std::cout << "Available actions: ";
                     for (char action : allowedChoices) {
                         switch (action) {
-                        case 'h': std::cout << "Hit (h) "; break;
-                        case 's': std::cout << "Stand (s) "; break;
-                        case 'd': std::cout << "Double (d) "; break;
-                        case 'p': std::cout << "Split (p) "; break;
+                        case 'h': std::cout << "Hit (h) "; 
+                            break;
+                        case 's': std::cout << "Stand (s) "; 
+                            break;
+                        case 'd': std::cout << "Double (d) "; 
+                            break;
+                        case 'p': std::cout << "Split (p) "; 
+                            break;
 
-                        default: std::cout << action << " "; break;
+                        default: std::cout << action << " "; 
+                            break;
                         }
                     }
                     std::cout << std::endl << "Choice: ";

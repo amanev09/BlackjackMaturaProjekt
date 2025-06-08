@@ -1,7 +1,7 @@
 #pragma once
 
 struct GameRules {
-    int deckCount = 1;
+    int deckCount = 6;
     int maxSplitHands = 1000000; // infinite
     double blackjackPayoutRatio = 3.0 / 2.0;
     bool doubleAfterSplit = true;
@@ -17,4 +17,7 @@ struct GameRules {
     std::vector<int> doubleDownOnCardValues; // only needed when doubleDownAlwaysAllowed = false
     double minBet = 0;
     double maxBet = 100;
+    GameRules() {
+        
+    }
 };

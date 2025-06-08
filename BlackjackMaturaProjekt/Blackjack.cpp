@@ -20,16 +20,21 @@ int main()
         {"numHands", "1"},
         {"bet", "1"},
         {"earlySurrender", "n"},
-        {"evenMoney", "n"},
+        {"evenMoney", "y"},
         {"insurance", "n"},
         {"lateSurrender", "n"},
         {"firstChoice", "s"}
     };
-
+    std::unordered_map<std::string, Card> startingCards = {
+        {"player1", Card('2', 'S')},
+        {"player2", Card('2', 'S')},
+        {"dealer1", Card('Q', 'S')}
+        
+    };
     double preBank = players[0].getBalance();
     int iterations = 1000;
     for (int i = 0; i < iterations; ++i) {
-        blackJack(r, players, d, shoe, &inputMap);
+        blackJack(r, players, d, shoe, &inputMap, &startingCards);
     }
     double postBank = players[0].getBalance();
     std::cout << "EV: " << (postBank-preBank)/iterations;
