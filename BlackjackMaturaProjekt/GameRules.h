@@ -8,7 +8,7 @@ struct GameRules {
     bool soft17 = false; // false means h17
     bool peakAmericanStyle = true; // otherwise european style, dealer doesnt peak at all until after all player actions are over
     bool earlySurrenderAllowed = false;
-    bool lateSurrenderAllowed = true;
+    bool lateSurrenderAllowed = false;
     bool insuranceAllowed = true;
     bool evenMoneyAllowed = true;
     bool resplitAcesAllowed = true;

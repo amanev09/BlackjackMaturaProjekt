@@ -1,8 +1,9 @@
 #include "Player.h"
 
 // Constructor to set player name and initialize one hand
-Player::Player(const std::string& playerName) : name(playerName) {
-    hands.emplace_back();
+Player::Player(const std::string& playerName) : name(playerName), balance(1000){
+    //hands.emplace_back();
+
 }
 
 void Player::setBalance(double balance) {

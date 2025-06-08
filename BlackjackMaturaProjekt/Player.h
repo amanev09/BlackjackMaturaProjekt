@@ -5,7 +5,7 @@
 class Player {
     std::string name;
     std::vector<Hand> hands;
-    double balance = 10;
+    double balance;
 public:
     // Constructor to set player name and initialize one hand
     Player(const std::string& playerName);
