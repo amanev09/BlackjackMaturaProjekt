@@ -141,6 +141,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameRules.h" />
     <ClInclude Include="Hand.h" />
+    <ClInclude Include="Outcomes.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shoe.h" />
   </ItemGroup>
