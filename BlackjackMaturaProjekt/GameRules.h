@@ -5,7 +5,7 @@ struct GameRules {
     int maxSplitHands = 1000000; // infinite
     double blackjackPayoutRatio = 3.0 / 2.0;
     bool doubleAfterSplit = true;
-    bool hitSoft17 = true;
+    bool hitSoft17 = false;
     bool peakAmericanStyle = true; // otherwise european style, dealer doesnt peak at all until after all player actions are over
     bool earlySurrenderAllowed = false;
     bool lateSurrenderAllowed = false;

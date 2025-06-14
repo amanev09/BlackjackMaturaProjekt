@@ -108,7 +108,7 @@ int Hand::getCardsCount() {
 
 void Hand::printHand() const noexcept {
     for (const Card& card : cards) {
-        //std::cout << card.getRank() << card.getSuit() << " ";
+        std::cout << card.getRank() << card.getSuit() << " ";
     }
-    //std::cout << "(" << this->getValue() << ")" << std::endl;
+    std::cout << "(" << this->getValue() << ")" << std::endl;
 }
