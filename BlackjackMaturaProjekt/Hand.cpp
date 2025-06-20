@@ -98,12 +98,18 @@ bool Hand::isSoft() { // determines if hand is soft(contains aces counted as 11)
     return false;
 }
 
+
+
 Card Hand::getCard(int i) const { // returns card for given index i
     return cards[i];
 }
 
 int Hand::getCardsCount() {
     return static_cast<int>(cards.size());
+}
+
+bool Hand::isSplittable() {
+    return cards.size() == 2 and (getCard(0).getRank() == getCard(1).getRank());
 }
 
 void Hand::printHand() const noexcept {

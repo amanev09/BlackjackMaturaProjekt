@@ -1,12 +1,13 @@
 #include "Game.h"
-
+#include "makeUniqueKey.h"
 
 gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices,
-    std::unordered_map<std::string, Card>* startingCards) {
+    std::unordered_map<std::string, Card>* startingCards, std::unordered_map<std::string, std::unordered_map<std::string, Card>> cache) {
     // plays one round of blackjack using certain rules for all players on the table
     gameResult gr; // for statistican analysis, tracks the result for all players and their hands
 
-    auto getInput = [&](const std::string& promptKey) -> std::string {
+    auto getInput = [&](const std::string& promptKey, const std::string* keyPtr) -> std::string {
+        
         if (inputChoices && inputChoices->count(promptKey)) {
             std::cout << inputChoices->at(promptKey)<<std::endl;
             return inputChoices->at(promptKey);
@@ -117,6 +118,10 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     }
     d.addCard(getStarterCard("dealer2"));
 
+    // quick print unique game key (identifier)q
+    std::string key = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);
+    std::cout << key;
+    // starting from here, we will also pass the 
     // before we start with pregame checks, offer early surrender if allowed
 
     if (r.earlySurrenderAllowed) {

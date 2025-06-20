@@ -132,6 +132,7 @@
     <ClCompile Include="Dealer.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Hand.cpp" />
+    <ClCompile Include="makeUniqueKey.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shoe.cpp" />
   </ItemGroup>
@@ -141,6 +142,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameRules.h" />
     <ClInclude Include="Hand.h" />
+    <ClInclude Include="makeUniqueKey.h" />
     <ClInclude Include="Outcomes.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shoe.h" />

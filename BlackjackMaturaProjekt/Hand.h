@@ -46,6 +46,8 @@ public:
 
     bool isSoft();
 
+    bool isSplittable();
+
     Card getCard(int i = 0) const;
 
     int getCardsCount();
