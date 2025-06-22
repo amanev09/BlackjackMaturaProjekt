@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "makeUniqueKey.h"
+#include "determineAllowedChoices.h"
 
 gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices,
     std::unordered_map<std::string, Card>* startingCards, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>* cache) {
@@ -13,7 +14,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             std::unordered_map<std::string, std::string>& innerMap = cache->at(cacheKey); // cache contains unordered maps of the same type as inputChoices
             // the idea is that cache>inputChoices>std::cin. and cache contains inputMaps.
             if (innerMap.count(promptKey)) { // the inner map does contain the choice
-                return innerMap.at(promptKey);
+                return innerMap.at(promptKey); // return the choice inside innerMap
             }
         }
         if (inputChoices && inputChoices->count(promptKey)) {
@@ -323,50 +324,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
 
                 // determine which actions are allowed, prompt the player with the allowed actions, reject any non-legal action
                 //hitting always allowed, standing always allowed, double allowed based on rules, splitting allowed when same pair AND rules
-                std::vector<char> allowedChoices;
-                allowedChoices.push_back('s'); // these are always allowed
-                if (not(player.getHands()[i].getFlagIsSplitHand() and player.getHands()[i].getCard(0).getRank() == 'A' and not r.hitSplitAcesAllowed)) {
-                    // the hand is a split resulting from a previous hand with 2 aces, only allow hitting when rules allow it
-                    allowedChoices.push_back('h');
-                }
-                // double allowed anytime on the first 2 cards of a hand. SO if a hand has exactly 2 cards, double down is allowed
-                // additional check to ensure player has the balance necessary to double down
-                // additional check with rules
-                if (player.getHands()[i].getCardsCount() == 2 && player.getBalance() >= player.getHands()[i].getBet()) {
+                std::vector<char> allowedChoices = determineAllowedChoices(player.getHands()[i], r, player.getBalance(), player.getHands().size());
 
-                    if (r.doubleDownAlwaysAllowed) {
-                        if (r.doubleAfterSplit) {
-                            // always allowed
-                            allowedChoices.push_back('d');
-                        }
-                        else if (not player.getHands()[i].getFlagIsSplitHand()) {
-                            // only allowed when the hand is NOT a split hand
-                            allowedChoices.push_back('d');
-                        }
-                    }
-                    else if (std::find(r.doubleDownOnCardValues.begin(), r.doubleDownOnCardValues.end(),
-                        player.getHands()[i].getValue()) != r.doubleDownOnCardValues.end()) { // searches the vector for the current hand value
-                        // if doubling is not always allowed, check if the current value is in the array of allowed double values.
-                        if (r.doubleAfterSplit) {
-                            // always allowed
-                            allowedChoices.push_back('d');
-                        }
-                        else if (not player.getHands()[i].getFlagIsSplitHand()) {
-                            // only allowed when the hand is NOT a split hand
-                            allowedChoices.push_back('d');
-                        }
-                    }
-                    // also if we are on two cards, if cards are the same, splitting would also be allowed
-                    // check that the amount of hands the player has does not surpas the max split limit
-                    // if resplitting aces is not allowed, prohibit splitting when both cards are aces and the hand has flag isSplitHand
-                    if (player.getHands()[i].getCard(0).getRank() == player.getHands()[i].getCard(1).getRank()
-                        and player.getHands().size() <= r.maxSplitHands) {
-                        if (not(player.getHands()[i].getCard(0).getRank() == 'A' and player.getHands()[i].getFlagIsSplitHand() and not r.resplitAcesAllowed)) {
-                            // only when both cards are Aces and the hand is a split hand already and resplitting aces is prohibited will this not run
-                            allowedChoices.push_back('p');
-                        }
-                    }
-                }
                 // legal actions determined and safed in allowedChoices vector
                 char choice = 'f';
                 while (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {

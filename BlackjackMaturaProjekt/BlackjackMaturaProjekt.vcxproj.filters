@@ -39,6 +39,9 @@
     <ClCompile Include="makeUniqueKey.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="determineAllowedChoices.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Card.h">
@@ -66,6 +69,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="makeUniqueKey.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="determineAllowedChoices.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

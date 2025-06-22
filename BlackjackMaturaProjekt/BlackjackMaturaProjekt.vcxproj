@@ -130,6 +130,7 @@
     <ClCompile Include="Blackjack.cpp" />
     <ClCompile Include="Card.cpp" />
     <ClCompile Include="Dealer.cpp" />
+    <ClCompile Include="determineAllowedChoices.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Hand.cpp" />
     <ClCompile Include="makeUniqueKey.cpp" />
@@ -139,6 +140,7 @@
   <ItemGroup>
     <ClInclude Include="Card.h" />
     <ClInclude Include="Dealer.h" />
+    <ClInclude Include="determineAllowedChoices.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameRules.h" />
     <ClInclude Include="Hand.h" />
