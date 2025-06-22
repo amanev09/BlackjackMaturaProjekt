@@ -2,21 +2,27 @@
 #include "makeUniqueKey.h"
 
 gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices,
-    std::unordered_map<std::string, Card>* startingCards, std::unordered_map<std::string, std::unordered_map<std::string, Card>> cache) {
+    std::unordered_map<std::string, Card>* startingCards, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>* cache) {
     // plays one round of blackjack using certain rules for all players on the table
     gameResult gr; // for statistican analysis, tracks the result for all players and their hands
 
-    auto getInput = [&](const std::string& promptKey, const std::string* keyPtr) -> std::string {
-        
+
+    auto getInput = [&](const std::string& promptKey, const std::string& cacheKey = "-1") -> std::string {
+        if (cache and cache->count(cacheKey)) {
+            // there is a fitting entry inside cache
+            std::unordered_map<std::string, std::string>& innerMap = cache->at(cacheKey); // cache contains unordered maps of the same type as inputChoices
+            // the idea is that cache>inputChoices>std::cin. and cache contains inputMaps.
+            if (innerMap.count(promptKey)) { // the inner map does contain the choice
+                return innerMap.at(promptKey);
+            }
+        }
         if (inputChoices && inputChoices->count(promptKey)) {
             std::cout << inputChoices->at(promptKey)<<std::endl;
             return inputChoices->at(promptKey);
         }
-        else {
-            std::string choice;
-            std::cin >> choice;
-            return choice;
-        }
+        std::string choice;
+        std::cin >> choice;
+        return choice;
         };
     auto getStarterCard = [&](const std::string& promptKey) -> Card {
         if (startingCards && startingCards->count(promptKey)) {
@@ -38,7 +44,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
 
         while (true) {
             std::cout << "How many hands do you want to play with (max " << r.maxSplitHands << "): ";
-            std::string input = getInput("numHands"); 
+            std::string input = getInput("numHands");
             try {
                 amount = std::stoi(input);
 
@@ -119,8 +125,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     d.addCard(getStarterCard("dealer2"));
 
     // quick print unique game key (identifier)q
-    std::string key = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);
-    std::cout << key;
+    std::string gameKey = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);
+    std::cout << gameKey;
     // starting from here, we will also pass the 
     // before we start with pregame checks, offer early surrender if allowed
 
@@ -138,7 +144,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 // after printing situation, ask if he wants to surrender the hand
                 while (choice != 'y' && choice != 'n') {
                     std::cout << "Do you want to surrender(y/n): ";
-                    std::string input = getInput("earlySurrender");
+                    std::string input = getInput("earlySurrender", gameKey);
                     choice = input[0];
                     if (choice != 'y' && choice != 'n') {
                         std::cout << "Invalid, please enter a valid choice!\n";
@@ -182,7 +188,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     while (choice != 'y' && choice != 'n') {
                         std::cout << "Do you want even money(y/n): ";
 
-                        std::string input = getInput("evenMoney");
+                        std::string input = getInput("evenMoney", gameKey);
                         choice = input[0];
 
                         if (choice != 'y' && choice != 'n') {
@@ -204,7 +210,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     while (choice != 'y' && choice != 'n' && r.insuranceAllowed) {
                         std::cout << "Do you want insurance(y/n): ";
 
-                        std::string input = getInput("insurance");
+                        std::string input = getInput("insurance", gameKey);
                         choice = input[0];
 
                         if (choice != 'y' && choice != 'n') {
@@ -265,6 +271,9 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     // loop through all hands that havent been played yet, ask the owner of the hand what to do.
     for (Player& player : players) { // loop all players
         for (size_t i = 0; i < player.getHands().size(); ++i) { // loop all hands of a player
+            // update gameKey to ensure correct lookups
+            gameKey = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);
+
             // check and perform a hand.
             int j = 0;
             while (player.getHands()[i].getFlagIsInTheGame()) {
@@ -285,7 +294,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     // after printing situation, ask if he wants to surrender the hand
                     while (choice != 'y' && choice != 'n') {
                         std::cout << "Do you want to surrender(y/n): ";
-                        std::string input = getInput("lateSurrender");
+                        std::string input = getInput("lateSurrender", gameKey);
                         choice = input[0];
                         if (choice != 'y' && choice != 'n') {
                             std::cout << "Invalid, please enter a valid choice!\n";
@@ -379,7 +388,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     }
                     std::cout << std::endl << "Choice: ";
 
-                    std::string input = getInput("firstChoice");
+                    std::string input = getInput("firstChoice", gameKey);
                     choice = input[0];
                     if (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
                         std::cout << "Invalid choice!" << std::endl;
