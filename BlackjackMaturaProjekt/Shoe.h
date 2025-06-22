@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Card.h"
-
+#include <random>
 class Shoe {
     std::vector<Card> cards; // Holds all cards in shoe
     int deckSize;
@@ -14,6 +14,7 @@ public:
 
     void reset();
 
+    std::string shoeKey();
 
     Card deal();
 
