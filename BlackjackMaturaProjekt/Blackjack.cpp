@@ -45,7 +45,7 @@ int main()
         shoe.shuffle();
 
         double preGameBalance = players[0].getBalance();
-        gameResult gr = blackJack(r, players, d, shoe, nullptr, &startingCards); // play one game of blackjack
+        gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards); // play one game of blackjack
         if (gr.playerResults["Nevio"].handResults[0].insuranceOutcome == InsuranceOutcome::TakenWon) {
             wonInsurance++;
         }

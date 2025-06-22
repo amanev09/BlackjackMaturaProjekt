@@ -33,7 +33,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
         playerResult pr;
         gr.playerResults[player.getName()] = pr; // stores all player results in here with key as the player name
         
-        int amount;
+        int amount; 
 
         while (true) {
             std::cout << "How many hands do you want to play with (max " << r.maxSplitHands << "): ";
@@ -556,7 +556,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             else if (hand.getValue() == d.getHand().getValue()) {
                 // push
                 double payout = hand.getBet();
-                std::cout << player.getName() << "'s hand " << i + 1 << " \033[38mpushes\033[0m, payout: " << payout << "\n";
+                std::cout << player.getName() << "'s hand " << i + 1 << " \033[35mpushes\033[0m, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
                 if (i < gr.playerResults[player.getName()].handResults.size()) {
                     // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
