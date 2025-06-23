@@ -125,7 +125,15 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     }
     d.addCard(getStarterCard("dealer2"));
     // we have given the players their starting cards
-    // TODO: functionality to permit something like "player3" or even "dealer3" to allow simulations like multi card hard/soft 21.
+    // optional '3rd' starting card to allow simulations like a multi card 21 or a soft 21 with more than 2 cards(specifically 3 cards)
+    for (Player& player : players) {
+        for (Hand& hand : player.getHands()) {
+            if (startingCards and startingCards->count("player3")) {
+                // we pass a third starting card for simulation purposes
+                hand.addCard(getStarterCard("player3"));
+            }
+        }
+    }
 
     // quick print unique game key (identifier)q
     std::string gameKey = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);

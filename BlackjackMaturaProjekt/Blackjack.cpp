@@ -22,15 +22,11 @@ int main()
         {"bet", "1"},
         {"earlySurrender", "n"},
         {"evenMoney", "n"},
-        {"insurance", "y"},
+        {"insurance", "n"},
         {"lateSurrender", "n"},
         {"firstChoice", "s"}
     };
-    std::unordered_map<std::string, Card> startingCards = {
-        {"player1", Card('T', 'S')},
-        {"player2", Card('J', 'H')},
-        {"dealer1", Card('A', 'S')},
-        { "dealer2", Card('7', 'S') }
+    std::unordered_map<std::string, Card> startingCards = { // empty because loop overrides it
     };
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> cache; // gameState, corresponding inputMap
@@ -47,6 +43,14 @@ int main()
     // get choices we can simulate for a given hand
 
     std::vector<Hand> handsToSimulate; // contains all hands that are to be simulated. Order: First element is the first hand to simulate.
+
+    // first, manually add arbitrary hard 21 with more than 2 cards
+
+    handsToSimulate.emplace_back();
+    Hand& h21 = handsToSimulate.back(); // grab reference to hand we just added
+    h21.addCard(Card('7', 'S'));
+    h21.addCard(Card('7', 'S'));
+    h21.addCard(Card('7', 'S')); // triple 7 lucky number lol
 
     for (int i = 20; i >= 5; i--) { // exclude 4 because the only way to build 4 with two cards is 2,2 and that hand is splittable. Postpone simulation(not an issue)
         // start with i = 20 which is the value we need to achieve for the current hand. Figure out the card combination, build the hand and add it into the vector
@@ -67,58 +71,117 @@ int main()
                 else {
                     c2 = '0' + (i - j);
                 }
-                handsToSimulate.emplace_back(c1, c2);
+                handsToSimulate.emplace_back();
+                Hand& h = handsToSimulate.back(); // grab reference to hand we just added
+                h.addCard(Card(c1, 'S'));
+                h.addCard(Card(c2, 'S'));
                 break; // break out of inner loop because we have found the card combination
             }
         }
     }
     // sucessfully added all hard hands, correct combination and order.
     // continue with all soft hands.
+    //begin by manually adding soft 21 with more than 2 cards
+
+    handsToSimulate.emplace_back(); // simply emplace back and all the soft hands get added
+    Hand& s21 = handsToSimulate.back(); // grab reference to hand we just added
+    s21.addCard(Card('A', 'S'));
+    s21.addCard(Card('5', 'S'));
+    s21.addCard(Card('5', 'S'));
+
     for (int i = 20; i >= 13; i--) { // smallest soft total is 13: 11,2
         char c1 = 'A'; // first card is always an ace
         // second card is just i-j(always lower than 10)
         char c2 = '0' + (i - 11); // remainder to fill
-        handsToSimulate.emplace_back(c1, c2); // simply emplace back and all soft hands get added
+
+        handsToSimulate.emplace_back(); // simply emplace back and all the soft hands get added
+        Hand& h = handsToSimulate.back(); // grab reference to hand we just added
+        h.addCard(Card(c1, 'S'));
+        h.addCard(Card(c2, 'S'));
     }
+    // finish by adding all splittable hands, note that because K,K =  T,T; only one out of 4 will be simulated
+    for (int i = 2; i <= 9; i++) {
+        char c = '0' + i;
+        handsToSimulate.emplace_back(); // simply emplace back and all the soft hands get added
+        Hand& h = handsToSimulate.back(); // grab reference to hand we just added
+        h.addCard(Card(c, 'S'));
+        h.addCard(Card(c, 'S'));
+    }
+    // add T,T and A,A because they are letters
+    handsToSimulate.emplace_back(); // simply emplace back and all the soft hands get added
+    Hand& tenHand = handsToSimulate.back(); // grab reference to hand we just added
+    tenHand.addCard(Card('T', 'S'));
+    tenHand.addCard(Card('T', 'S'));
+    handsToSimulate.emplace_back(); // simply emplace back and all the soft hands get added
+    Hand& aceHand = handsToSimulate.back(); // grab reference to hand we just added
+    aceHand.addCard(Card('A', 'S'));
+    aceHand.addCard(Card('A', 'S'));
+    // vector handsToSimulate now fully populated with all hands we want to simulate
 
-    Hand tempHand;
-    tempHand.addCard(startingCards.at("player1"));
-    tempHand.addCard(startingCards.at("player2"));
 
-    std::vector<char> allowedChoices = determineAllowedChoices(tempHand, r, players[0].getBalance(), players[0].getHands().size());
+    for (Hand& h : handsToSimulate) {
+        std::vector<char> allowedChoices = determineAllowedChoices(h, r, players[0].getBalance(), players[0].getHands().size()); // need to figure out what choices we can simulate for the given hand
+        // set the startingCards unordered_map
+        startingCards.clear(); // first, clear out the starting cards, then add all of the correct starting cards
 
-    // we now know what choices we can simulate. Now we simply iterate through this vector
-    for (char choice : allowedChoices) {
-        inputMap["firstChoice"] = choice; // assign the correct choice
+        for (int i = 0; i < h.getCardsCount(); ++i) {
+            // loop through all cards of the hand
+            std::string  key = "player" + std::to_string(i + 1);
+            startingCards.emplace(key, h.getCard(i));
 
-        for (int i = 0; i < iterations; ++i) {
-
-            shoe.reset();
-            shoe.removeCard('T', 'S');
-            shoe.removeCard('T', 'H');
-            shoe.removeCard('A', 'S'); // modify the shoe composition the way we 
-            shoe.shuffle();
-
-            double preGameBalance = players[0].getBalance();
-            gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
-            if (gr.playerResults["Nevio"].handResults[0].insuranceOutcome == InsuranceOutcome::TakenWon) {
-                wonInsurance++;
+        }
+        // assign correct starting card to the dealer too
+        for (int i = 11; i >= 2; --i) {
+            char c;
+            if (i >= 2 and i <= 9) {
+                c = '0' + i;
             }
-            else if (gr.playerResults["Nevio"].handResults[0].insuranceOutcome == InsuranceOutcome::TakenLost) {
-                lostInsurance++;
+            if (i == 10) {
+                c = 'T';
             }
-            else {
-                noInsurance++;
+            if (i == 11) {
+                c = 'A';
             }
-            if (gr.dealerHadBlackjack == true) {
-                // discard the round
-                i--;
-                players[0].setBalance(preGameBalance); // reset balance
+            
+            startingCards.insert_or_assign("dealer1", Card(c, 'S')); // assign when it doesnt exist, insert when it does
+            
+            // correct starting cards now assigned
+
+            for (char choice : allowedChoices) {
+                // ensure correct inputMap, currently only change 'firstChoice' entry
+                inputMap["firstChoice"] = choice;
+                for (int i = 0; i < iterations; ++i) {
+                    // main simulation loop
+                    shoe.reset();
+                    //purposefully dont remove added cards for now
+                    shoe.shuffle();
+
+                    double preGameBalance = players[0].getBalance();
+                    gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
+                    if (gr.playerResults["Nevio"].handResults[0].insuranceOutcome == InsuranceOutcome::TakenWon) {
+
+                        wonInsurance++;
+                    }
+                    else if (gr.playerResults["Nevio"].handResults[0].insuranceOutcome == InsuranceOutcome::TakenLost) {
+                        lostInsurance++;
+                    }
+                    else {
+                        noInsurance++;
+                    }
+                    if (gr.dealerHadBlackjack == true) {
+                        // discard the round
+                        i--;
+                        players[0].setBalance(preGameBalance); // reset balance
+                    }
+
+                }
+                double postBank = players[0].getBalance();
+                std::cout << "EV: " << (postBank - preBank) / iterations;
+                std::cout << "\nInsurance EV: " << (wonInsurance * 2 - lostInsurance) / iterations;
             }
         }
     }
-    double postBank = players[0].getBalance();
-    std::cout << "EV: " << (postBank-preBank)/iterations;
-    std::cout << "\nInsurance EV: " << (wonInsurance*2-lostInsurance)/iterations;
+
+
     return 0;
 }
