@@ -28,12 +28,12 @@ int main()
     };
     std::unordered_map<std::string, Card> startingCards = {
         {"player1", Card('T', 'S')},
-        {"player2", Card('T', 'H')},
+        {"player2", Card('J', 'H')},
         {"dealer1", Card('A', 'S')},
         { "dealer2", Card('7', 'S') }
     };
 
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> cache;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> cache; // gameState, corresponding inputMap
     /*
     The cache contains other input maps for a given key. The idea is that the program saves the best inputMap combination for a given situation(key) inside the cache.
     When the program later needs to lookup the best move for a given situation, it simply generates the key for the situation and uses it to lookup the cached inputMap and then uses that.
@@ -44,11 +44,49 @@ int main()
     double wonInsurance = 0;
     double lostInsurance = 0;
     int noInsurance = 0;
+    // get choices we can simulate for a given hand
+
+    std::vector<Hand> handsToSimulate; // contains all hands that are to be simulated. Order: First element is the first hand to simulate.
+
+    for (int i = 20; i >= 5; i--) { // exclude 4 because the only way to build 4 with two cards is 2,2 and that hand is splittable. Postpone simulation(not an issue)
+        // start with i = 20 which is the value we need to achieve for the current hand. Figure out the card combination, build the hand and add it into the vector
+        for (int j = 10; j >= 2; j--) {
+            // to figure out first card: loop all cards and figure out the highest value card that ensures that the remainder that the second card needs to fill is equal or greater than 2
+            if (i - j >= 2) { // if remainder is greater or equal 2, j is our first card value
+                char c1;
+                char c2;
+                if (j == 10) {
+                    c1 = 'T'; // set it manually to ten because '10' is not a valid argument for the card constructor
+                }
+                else {
+                    c1 = '0' + j; // '0' + integer = correct char if 1-9.
+                }
+                if (i - j == 10) {
+                    c2 = 'K'; // arbitrary other 10 value card
+                }
+                else {
+                    c2 = '0' + (i - j);
+                }
+                handsToSimulate.emplace_back(c1, c2);
+                break; // break out of inner loop because we have found the card combination
+            }
+        }
+    }
+    // sucessfully added all hard hands, correct combination and order.
+    // continue with all soft hands.
+    for (int i = 20; i >= 13; i--) { // smallest soft total is 13: 11,2
+        char c1 = 'A'; // first card is always an ace
+        // second card is just i-j(always lower than 10)
+        char c2 = '0' + (i - 11); // remainder to fill
+        handsToSimulate.emplace_back(c1, c2); // simply emplace back and all soft hands get added
+    }
 
     Hand tempHand;
     tempHand.addCard(startingCards.at("player1"));
     tempHand.addCard(startingCards.at("player2"));
+
     std::vector<char> allowedChoices = determineAllowedChoices(tempHand, r, players[0].getBalance(), players[0].getHands().size());
+
     // we now know what choices we can simulate. Now we simply iterate through this vector
     for (char choice : allowedChoices) {
         inputMap["firstChoice"] = choice; // assign the correct choice
@@ -74,8 +112,8 @@ int main()
             }
             if (gr.dealerHadBlackjack == true) {
                 // discard the round
-                //i--;
-                //players[0].setBalance(preGameBalance); // reset balance
+                i--;
+                players[0].setBalance(preGameBalance); // reset balance
             }
         }
     }
