@@ -9,7 +9,7 @@
 
 int main()
 {
-    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
 
     std::vector<Player> players;
     GameRules r;
@@ -22,24 +22,24 @@ int main()
         {"bet", "1"},
         {"earlySurrender", "n"},
         {"evenMoney", "n"},
-        {"insurance", "n"},
+        {"insurance", "y"},
         {"lateSurrender", "n"},
         {"firstChoice", "s"}
     };
     std::unordered_map<std::string, Card> startingCards = { // empty because loop overrides it
+        {"player1", Card('7', 'S')}, 
+        {"player2", Card('K', 'S')},
+        {"dealer1", Card('A', 'S')},
     };
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> cache; // gameState, corresponding inputMap
+    std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> absoluteCache; // absoluteCache holds all values, not just best
+
     /*
     The cache contains other input maps for a given key. The idea is that the program saves the best inputMap combination for a given situation(key) inside the cache.
     When the program later needs to lookup the best move for a given situation, it simply generates the key for the situation and uses it to lookup the cached inputMap and then uses that.
     */
 
-    double preBank = players[0].getBalance();
-    int iterations = 1;
-    double wonInsurance = 0;
-    double lostInsurance = 0;
-    int noInsurance = 0;
     // get choices we can simulate for a given hand
 
     std::vector<Hand> handsToSimulate; // contains all hands that are to be simulated. Order: First element is the first hand to simulate.
@@ -117,7 +117,7 @@ int main()
     aceHand.addCard(Card('A', 'S'));
     aceHand.addCard(Card('A', 'S'));
     // vector handsToSimulate now fully populated with all hands we want to simulate
-
+    // note that technically I couldve simply manually added entries to the vector but this is much cooler
 
     for (Hand& h : handsToSimulate) {
         std::vector<char> allowedChoices = determineAllowedChoices(h, r, players[0].getBalance(), players[0].getHands().size()); // need to figure out what choices we can simulate for the given hand
@@ -147,17 +147,32 @@ int main()
             
             // correct starting cards now assigned
 
+            std::vector<std::pair<double, std::unordered_map<std::string, std::string>>> miniCache; // holds the temporary EV results for the diffrent choices in a given situation
+            std::unordered_map<std::string, std::string> bestInputMap;
+            double bestEV = -100;
+            double insuranceEV = -100;
+            std::string uniqueKey = makeUniqueKey(h.getValue(),2, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe); // we now have the unique key
+            std::string uniqueKeyMultiCard = makeUniqueKey(h.getValue(), 3, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
             for (char choice : allowedChoices) {
                 // ensure correct inputMap, currently only change 'firstChoice' entry
+
+                int iterations = 10000;
+                double wonInsurance = 0;
+                double lostInsurance = 0;
+                int noInsurance = 0;
+                int discardedRounds = 0;
+                double winnings = 0;
+
                 inputMap["firstChoice"] = choice;
                 for (int i = 0; i < iterations; ++i) {
                     // main simulation loop
                     shoe.reset();
                     //purposefully dont remove added cards for now
+                    
                     shoe.shuffle();
-
                     double preGameBalance = players[0].getBalance();
                     gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
+
                     if (gr.playerResults["Nevio"].handResults[0].insuranceOutcome == InsuranceOutcome::TakenWon) {
 
                         wonInsurance++;
@@ -168,20 +183,75 @@ int main()
                     else {
                         noInsurance++;
                     }
+
+
                     if (gr.dealerHadBlackjack == true) {
                         // discard the round
                         i--;
-                        players[0].setBalance(preGameBalance); // reset balance
+                        discardedRounds++;
+
+                    }
+                    else {
+                        // dealer did not have blackjack
+                        auto hc = gr.playerResults["Nevio"].handResults[0].handOutcome;
+                        double multiplier = 1;
+                        if (choice == 'd')
+                        { multiplier = 2; }
+                        if (hc == HandOutcome::blackjackWin) {
+                            winnings += r.blackjackPayoutRatio* multiplier;
+                        }
+                        if (hc == HandOutcome::wonByDealerBust or hc == HandOutcome::wonByHigherValue) {
+                            winnings+=1* multiplier;
+                        }
+                        if (hc == HandOutcome::lostByBust or hc == HandOutcome::lostByLowerValue) {
+                            winnings-=1* multiplier;
+                        }
                     }
 
                 }
-                double postBank = players[0].getBalance();
-                std::cout << "EV: " << (postBank - preBank) / iterations;
-                std::cout << "\nInsurance EV: " << (wonInsurance * 2 - lostInsurance) / iterations;
+                double baseEV = winnings / iterations;
+                insuranceEV = (wonInsurance * 2 - lostInsurance) / (iterations + discardedRounds);
+                //std::cout << "EV for " << choice << ": " << baseEV<<std::endl;
+                //std::cout << "EV for insurance: " << insuranceEV<<std::endl;
+
+                inputMap["insurance"] = 'n';
+                if (insuranceEV > 0) {
+                    inputMap["insurance"] = 'y';
+                }
+
+                miniCache.emplace_back(baseEV, inputMap); // EV with corresponding inputMap and correct insurance choice
+                inputMap["insurance"] = 'y'; // for simulation
+                
             }
+            std::sort(miniCache.begin(), miniCache.end(),
+                [](const auto& a, const auto& b) {
+                    return a.first > b.first; // highest EV comes first
+                });
+            // sorted the miniCache, put it inside absolute cache, then determine normal cache based on miniCache
+
+            for (const auto& pair : miniCache) {
+                double ev = pair.first;
+                const auto& inputMap = pair.second;
+
+                std::cout << "EV: " << ev;
+                std::cout << ", First choice: " << inputMap.at("firstChoice") << "\n";
+            }
+
+            absoluteCache.insert_or_assign(uniqueKey, miniCache);
+            cache.insert_or_assign(uniqueKey, miniCache[0].second); // first entry is the one with the highest EV
+            cache.insert_or_assign(uniqueKeyMultiCard, miniCache[0].second);
+            std::cout << "Best EV for " << uniqueKey << " is: " << cache[uniqueKey]["firstChoice"] << " with EV: " << miniCache[0].first << ", insurance is '" << miniCache[0].second["insurance"] << "' with an EV of: " << insuranceEV << "\n";
+            if (miniCache[0].second["firstChoice"] == "d") {
+                cache.insert_or_assign(uniqueKeyMultiCard, miniCache[1].second); 
+                //std::cout << "Best EV for " << uniqueKeyMultiCard << " is: " << cache[uniqueKeyMultiCard]["firstChoice"] << " with EV: " << miniCache[1].first << ", insurance is '" << miniCache[0].second["insurance"] << "' with an EV of: " << insuranceEV << "\n";
+            }
+            else {
+                //std::cout << "Best EV for " << uniqueKeyMultiCard << " is: " << cache[uniqueKeyMultiCard]["firstChoice"] << " with EV: " << miniCache[0].first << ", insurance is '" << miniCache[0].second["insurance"] << "' with an EV of: " << insuranceEV << "\n";
+            }
+            
+
         }
     }
-
 
     return 0;
 }

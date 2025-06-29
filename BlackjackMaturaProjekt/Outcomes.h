@@ -23,7 +23,7 @@ enum class InsuranceOutcome : int {
 struct handResult {
     // this struct contains the result data for each hand after a game
     HandOutcome handOutcome; // holds the resolution data for each hand (how did we lose/win) *this is a must set*
-    InsuranceOutcome insuranceOutcome; // holds resolution data for insurance, by default set on no insurance taken
+    InsuranceOutcome insuranceOutcome = InsuranceOutcome::NotTaken; // holds resolution data for insurance, by default set on no insurance taken
 };
 
 struct playerResult {
