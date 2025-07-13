@@ -1,5 +1,11 @@
 #include "Hand.h"
 
+Hand::Hand(){}
+Hand::Hand(const std::vector<Card>& cardVector) {
+    for (const Card& c : cardVector) {
+        cards.push_back(c);
+    }
+}
 
 void Hand::addCard(const Card& card) {
     cards.push_back(card); // adds card to hand

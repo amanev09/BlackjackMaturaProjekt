@@ -3,18 +3,33 @@
 #include "determineAllowedChoices.h"
 
 gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices,
-    std::unordered_map<std::string, Card>* startingCards, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>* cache) {
+    std::unordered_map<std::string, Card>* startingCards,
+    const std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>>* cache) {
     // plays one round of blackjack using certain rules for all players on the table
     gameResult gr; // for statistican analysis, tracks the result for all players and their hands
 
 
-    auto getInput = [&](const std::string& promptKey, const std::string& cacheKey = "-1") -> std::string {
-        if (cache and cache->count(cacheKey)) {
-            // there is a fitting entry inside cache
-            std::unordered_map<std::string, std::string>& innerMap = cache->at(cacheKey); // cache contains unordered maps of the same type as inputChoices
-            // the idea is that cache>inputChoices>std::cin. and cache contains inputMaps.
-            if (innerMap.count(promptKey)) { // the inner map does contain the choice
-                return innerMap.at(promptKey); // return the choice inside innerMap
+    auto getInput = [&](const std::string& promptKey, const std::string& cacheKey = "-1", const std::vector<char> allowedChoices = {}) -> std::string {
+
+        if (cache && cache->count(cacheKey)) {
+            const auto& vec = cache->at(cacheKey);
+
+            if (promptKey == "choice") {
+                for (const auto& pair : vec) {
+                    const auto& map = pair.second;
+                    for (char c : allowedChoices) {
+                        if (map.count("choice") && map.at("choice") == std::string(1, c)) {
+                            return map.at("choice");
+                        }
+                    }
+                }
+            }
+
+            if (!vec.empty()) {
+                const auto& innerMap = vec[0].second;
+                if (innerMap.count(promptKey)) {
+                    return innerMap.at(promptKey);
+                }
             }
         }
         if (inputChoices && inputChoices->count(promptKey)) {
@@ -25,6 +40,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
         std::cin >> choice;
         return choice;
         };
+
     auto getStarterCard = [&](const std::string& promptKey) -> Card {
         if (startingCards && startingCards->count(promptKey)) {
             Card c = startingCards->at(promptKey);
@@ -190,7 +206,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     if (d.getUpCard().getRank() == 'A' and not flagRoundEnd and r.peakAmericanStyle) {
         // dealer has ace upcard, offer insurance and if necessary even money
         for (Player& player : players) { // loop through every player
-            for (Hand& hand : player.getHands()) {
+            for (size_t i = 0; i < player.getHands().size(); ++i) {
+                Hand& hand = player.getHands()[i];
                 char choice = 'f';
                 if (hand.getValue() == 21 && r.evenMoneyAllowed && hand.getCardsCount() == 2) { // player has natural blackjack, offer even money and disable the hand
                     hand.setFlagIsInTheGame(false);
@@ -237,7 +254,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
 
                     }
                     else if (choice == 'n') {
-                        // dont do anything
+                        gr.playerResults[player.getName()].handResults[i].insuranceOutcome = InsuranceOutcome::NotTaken;
                     }
                 }
             }
@@ -356,10 +373,11 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     }
                     //std::cout << std::endl << "Choice: ";
 
-                    std::string input = getInput("firstChoice", gameKey);
+                    std::string input = getInput("choice", gameKey, allowedChoices);
                     choice = input[0];
                     if (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
-                        //std::cout << "Invalid choice!" << std::endl;
+                        std::cout << "Invalid choice!" << std::endl;
+                        std::cout << gameKey;
                     }
                 }
                 // we now have a legal choice. Execute that choice now.
@@ -395,6 +413,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     player.getHands()[endOfVector].setBet(player.getHands()[i].getBet()); // match the bet of the new hand to the old one
                     player.setBalance(player.getBalance() - player.getHands()[i].getBet());
                     j = 0; // reset the iteration count because we basically are at the start of the game playing 2 hands(important for asking if we want to surrender)
+                    gr.playerResults[player.getName()].handResults.emplace_back(); // create an additional handResults struct for the hand we just created
                 }
                 // after the choice is executed, check if we busted or not, if we did we need to disable the hand 
                 if (player.getHands()[i].getValue() > 21) { // only > not >= because you could still technically hit a hand with value 21 (except on starting hand)
@@ -432,7 +451,10 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             // if we busted we always lose
             // if we didnt bust: If we have higher value than dealer we win, if we have same we push, if we dont we lose
             // special: If we have a 21 and exactly 2 cards we have a blackjack: return base bet + Payout 3:2 or 1:1 if even moeny was taken.
-
+            handResult& hres = gr.playerResults[player.getName()].handResults[i];
+            hres.isSplitHand = hand.getFlagIsSplitHand(); // add that info to the return
+            hres.handBet = hand.getBet(); // also important for EV calc
+            // TODO: New EV calculation that takes into account handBet. New variable totalWagered, for split hands add up all bets for all hands in each round. Derive the winnings
             if (player.getHands()[i].getSideBet("insurance")) {
                 // if we took insurance
                 if (d.getHand().getValue() == 21 and d.getHand().getCardsCount() == 2) {
@@ -441,9 +463,10 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     double payout = hand.getSideBet("insurance") * 3; // this is only the insurance payout, real hand comes later
                     //std::cout << "Dealer had blackjack, " << player.getName() << "'s hand " << i + 1 << " insurance payout: " << payout << "\n"; // sidebet * 2
                     player.setBalance(player.getBalance() + payout);
-                    if (i < gr.playerResults[player.getName()].handResults.size()) {
-                        gr.playerResults[player.getName()].handResults[i].insuranceOutcome = InsuranceOutcome::TakenWon;
-                    }
+
+                    hres.insuranceOutcome = InsuranceOutcome::TakenWon;
+                    hres.insuranceWinnings += payout - hand.getSideBet("insurance");
+                    
                 }
                 else {
                     // and dealer doesnt have blackjack
@@ -451,9 +474,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     double payout = 0; // this is only the insurance payout, real hand comes later
                     //std::cout << "Dealer didn't have blackjack, " << player.getName() << "'s hand " << i + 1 << " insurance payout: " << payout << "\n"; // 0
                     player.setBalance(player.getBalance() + payout);
-                    if (i < gr.playerResults[player.getName()].handResults.size()) {
-                        gr.playerResults[player.getName()].handResults[i].insuranceOutcome = InsuranceOutcome::TakenLost;
-                    }
+                    hres.insuranceOutcome = InsuranceOutcome::TakenLost;
+                    hres.insuranceWinnings += payout-hand.getSideBet("insurance");
                 }
             }
             // sidebet resolution over
@@ -463,19 +485,15 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 //std::cout << player.getName() << "'s hand " << i + 1 << " had surrendered, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
 
-                if (i < gr.playerResults[player.getName()].handResults.size()) {
-                    // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                    gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::surrendered;
-                }
+                hres.handOutcome = HandOutcome::surrendered;
+                hres.handWinnings += payout - hand.getBet();
             }
             else if (hand.getValue() > 21) {
                 // we lose
                 double payout = 0;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " \033[31mloses\033[0m, payout: " << payout << "\n";
-                if (i < gr.playerResults[player.getName()].handResults.size()) {
-                    // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                    gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::lostByBust;
-                }
+                hres.handOutcome = HandOutcome::lostByBust;
+                hres.handWinnings += payout - hand.getBet();
 
             }
             else if (hand.getValue() == 21 and hand.getCardsCount() == 2) { // this is a true blackjack
@@ -485,10 +503,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     //std::cout << player.getName() << "'s hand " << i + 1 << " had even money, payout: " << payout << "\n";
                     player.setBalance(player.getBalance() + payout);
 
-                    if (i < gr.playerResults[player.getName()].handResults.size()) {
-                        // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                        gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::evenMoney;
-                    }
+                    hres.handOutcome = HandOutcome::evenMoney;
+                    hres.handWinnings += payout - hand.getBet();
                 }
                 else {
                     // we have true blackjack without even money, compare with dealer value to determine payout(push or blackjack)
@@ -497,21 +513,16 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                         double payout = hand.getBet();
                         //std::cout << player.getName() << "'s hand " << i + 1 << " pushes blackjack, payout: " << payout << "\n";
                         player.setBalance(player.getBalance() + payout);
-                        if (i < gr.playerResults[player.getName()].handResults.size()) {
-                            // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                            gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::pushByDealerBlackjack;
-                        }
+                        hres.handOutcome = HandOutcome::pushByDealerBlackjack;
+                        hres.handWinnings += payout - hand.getBet();
                     }
                     else {
                         // BLACKJACK
                         double payout = hand.getBet() + hand.getBet() * r.blackjackPayoutRatio;
                         //std::cout << player.getName() << "'s hand " << i + 1 << " wins blackjack, payout: " << payout << "\n";
                         player.setBalance(player.getBalance() + payout);
-
-                        if (i < gr.playerResults[player.getName()].handResults.size()) {
-                            // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                            gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::blackjackWin;
-                        }
+                        hres.handOutcome = HandOutcome::blackjackWin;
+                        hres.handWinnings += payout - hand.getBet();
                     }
                 }
             }
@@ -520,40 +531,32 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 double payout = hand.getBet() * 2;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " 	\033[32mwins\033[0m, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
-                if (i < gr.playerResults[player.getName()].handResults.size()) {
-                    // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                    gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::wonByDealerBust;
-                }
+                hres.handOutcome = HandOutcome::wonByDealerBust;
+                hres.handWinnings += payout - hand.getBet();
             }
             else if (hand.getValue() > d.getHand().getValue()) {
                 // win
                 double payout = hand.getBet() * 2;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " 	\033[32mwins\033[0m, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
-                if (i < gr.playerResults[player.getName()].handResults.size()) {
-                    // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                    gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::wonByHigherValue;
-                }
+                hres.handOutcome = HandOutcome::wonByHigherValue;
+                hres.handWinnings += payout - hand.getBet();
             }
             else if (hand.getValue() == d.getHand().getValue()) {
                 // push
                 double payout = hand.getBet();
                 //std::cout << player.getName() << "'s hand " << i + 1 << " \033[35mpushes\033[0m, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
-                if (i < gr.playerResults[player.getName()].handResults.size()) {
-                    // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                    gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::pushBySameValue;
-                }
+                hres.handOutcome = HandOutcome::pushBySameValue;
+                hres.handWinnings += payout - hand.getBet();
             }
             else if (hand.getValue() < d.getHand().getValue()) {
                 // lose
                 double payout = 0;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " \033[31mloses\033[0m, payout: " << payout << "\n";
                 player.setBalance(player.getBalance() + payout);
-                if (i < gr.playerResults[player.getName()].handResults.size()) {
-                    // only record stats when we are on a hand that the player had initially(dont note down split hand stats)
-                    gr.playerResults[player.getName()].handResults[i].handOutcome = HandOutcome::lostByLowerValue;
-                }
+                hres.handOutcome = HandOutcome::lostByLowerValue;
+                hres.handWinnings += payout - hand.getBet();
             }
         }
         //std::cout << player.getName() << "'s new balance: " << player.getBalance() << "\n";

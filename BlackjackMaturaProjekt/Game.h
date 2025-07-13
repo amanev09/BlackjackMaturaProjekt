@@ -14,4 +14,5 @@
 #include "Outcomes.h"
 
 gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe& shoe, const std::unordered_map<std::string, std::string>* inputChoices = nullptr,
-	std::unordered_map<std::string, Card>* startingCards = nullptr, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>* cache = nullptr);
+	std::unordered_map<std::string, Card>* startingCards = nullptr,
+	const std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>>* cache = nullptr);

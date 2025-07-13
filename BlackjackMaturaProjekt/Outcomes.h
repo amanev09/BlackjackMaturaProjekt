@@ -24,6 +24,10 @@ struct handResult {
     // this struct contains the result data for each hand after a game
     HandOutcome handOutcome; // holds the resolution data for each hand (how did we lose/win) *this is a must set*
     InsuranceOutcome insuranceOutcome = InsuranceOutcome::NotTaken; // holds resolution data for insurance, by default set on no insurance taken
+    double handBet; // bet at resolution of hand(eg doubling and splitting is accounted for here)
+    double handWinnings = 0;
+    double insuranceWinnings = 0;
+    bool isSplitHand; 
 };
 
 struct playerResult {

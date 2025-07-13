@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="basicStrategy.cpp" />
     <ClCompile Include="Blackjack.cpp" />
     <ClCompile Include="Card.cpp" />
     <ClCompile Include="Dealer.cpp" />
@@ -136,8 +137,10 @@
     <ClCompile Include="makeUniqueKey.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shoe.cpp" />
+    <ClCompile Include="strategySimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="basicStrategy.h" />
     <ClInclude Include="Card.h" />
     <ClInclude Include="Dealer.h" />
     <ClInclude Include="determineAllowedChoices.h" />
@@ -148,6 +151,7 @@
     <ClInclude Include="Outcomes.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shoe.h" />
+    <ClInclude Include="strategySimulation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,6 +16,8 @@ class Hand {
     bool flagIsSplitHand = false; // is this hand the result of splitting a previous hand
     std::unordered_map<std::string, double> sideBets; // dictionary for the sidebet and respective bet amount. includes but not limited to insurance, even money
 public:
+    Hand();
+    Hand(const std::vector<Card>& cardVector);
     void addCard(const Card& card);
 
     Card removeCard(int i);

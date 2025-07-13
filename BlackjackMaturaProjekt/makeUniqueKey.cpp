@@ -2,6 +2,7 @@
 #include "Shoe.h"
 #include <sstream> 
 #include "makeUniqueKey.h"
+
 std::string makeUniqueKey(int playerVal, int cardAmount, bool isSoft, bool isSplittable, int dealerUpCard, Shoe& shoe) {
 	// assumption is that gamerules stay the same during a game
 	std::string c;
