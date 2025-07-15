@@ -14,7 +14,7 @@ std::vector<char> determineAllowedChoices(Hand& hand, GameRules& r, double balan
     if (hand.getCardsCount() == 2 && balance >= hand.getBet()) {
 
         if (r.doubleDownAlwaysAllowed) {
-            if (r.doubleAfterSplit) {
+            if (r.doubleAfterSplit and r.hitSplitAcesAllowed) { // doubling not allowed when hitting not allowed too even if DAS allowed
                 // always allowed
                 allowedChoices.push_back('d');
             }
@@ -26,7 +26,7 @@ std::vector<char> determineAllowedChoices(Hand& hand, GameRules& r, double balan
         else if (std::find(r.doubleDownOnCardValues.begin(), r.doubleDownOnCardValues.end(),
             hand.getValue()) != r.doubleDownOnCardValues.end()) { // searches the vector for the current hand value
             // if doubling is not always allowed, check if the current value is in the array of allowed double values.
-            if (r.doubleAfterSplit) {
+            if (r.doubleAfterSplit and r.hitSplitAcesAllowed) {
                 // always allowed
                 allowedChoices.push_back('d');
             }
@@ -38,8 +38,7 @@ std::vector<char> determineAllowedChoices(Hand& hand, GameRules& r, double balan
         // also if we are on two cards, if cards are the same, splitting would also be allowed
         // check that the amount of hands the player has does not surpas the max split limit
         // if resplitting aces is not allowed, prohibit splitting when both cards are aces and the hand has flag isSplitHand
-        if (hand.getCard(0).getRank() == hand.getCard(1).getRank()
-            and playerHandSize <= r.maxSplitHands) {
+        if (hand.getCard(0).getValue() == hand.getCard(1).getValue() and playerHandSize <= r.maxSplitHands) {
             if (not(hand.getCard(0).getRank() == 'A' and hand.getFlagIsSplitHand() and not r.resplitAcesAllowed)) {
                 // only when both cards are Aces and the hand is a split hand already and resplitting aces is prohibited will this not run
                 allowedChoices.push_back('p');

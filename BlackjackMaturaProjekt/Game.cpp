@@ -19,6 +19,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     const auto& map = pair.second;
                     for (char c : allowedChoices) {
                         if (map.count("choice") && map.at("choice") == std::string(1, c)) {
+                            //std::cout << map.at("choice")<<"\n";
                             return map.at("choice");
                         }
                     }
@@ -33,6 +34,16 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             }
         }
         if (inputChoices && inputChoices->count(promptKey)) {
+            if (promptKey == "choice") {
+                for (char c : allowedChoices) {
+                    if (inputChoices->at(promptKey) == std::string(1, c)) {
+                        //std::cout << inputChoices->at(promptKey) << std::endl;
+                        return inputChoices->at(promptKey);
+                    }
+                }
+                // occurs when we split A,A and get A,A and choice is 'p' but gamerules prohibit resplitting aces
+                return std::string(1, allowedChoices[0]);
+            }
             //std::cout << inputChoices->at(promptKey)<<std::endl;
             return inputChoices->at(promptKey);
         }
@@ -376,8 +387,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     std::string input = getInput("choice", gameKey, allowedChoices);
                     choice = input[0];
                     if (std::find(allowedChoices.begin(), allowedChoices.end(), choice) == allowedChoices.end()) {
-                        std::cout << "Invalid choice!" << std::endl;
-                        std::cout << gameKey;
+                        //std::cout << "Invalid choice!" << std::endl;
+                        //std::cout << gameKey;
                     }
                 }
                 // we now have a legal choice. Execute that choice now.
@@ -406,7 +417,6 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
 
                     player.getHands()[i].setFlagIsSplitHand(true);
                     player.getHands()[endOfVector].setFlagIsSplitHand(true);
-
                     player.getHands()[endOfVector].addCard(player.getHands()[i].removeCard(1)); // remove it and add it to the other hand, then redeal new cards to those hands
                     player.getHands()[i].addCard(shoe.deal());
                     player.getHands()[endOfVector].addCard(shoe.deal());
@@ -479,7 +489,9 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 }
             }
             // sidebet resolution over
-            
+            if (d.getHand().getValue() == 21 && d.getHand().getCardsCount() == 2 and (hand.getCard(0).getValue()+ hand.getCard(1).getValue()) == 11){
+                //std::cout << "hit";
+            }
             if (hand.getFlagSurrendered()) { // we surrendered the hand, return bet/2
                 double payout = hand.getBet() / 2;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " had surrendered, payout: " << payout << "\n";
@@ -496,7 +508,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 hres.handWinnings += payout - hand.getBet();
 
             }
-            else if (hand.getValue() == 21 and hand.getCardsCount() == 2) { // this is a true blackjack
+            else if (hand.getValue() == 21 and hand.getCardsCount() == 2 and not hand.getFlagIsSplitHand()) { // this is a true blackjack
                 if (hand.getFlagEvenMoney()) {
                     // we have true blackjack with even money, return bet twice because of the 1:1 payout
                     double payout = hand.getBet() * 2;

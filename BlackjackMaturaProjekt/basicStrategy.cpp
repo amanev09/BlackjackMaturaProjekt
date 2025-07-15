@@ -39,7 +39,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
     std::map<std::string, std::vector<std::pair<double, std::string>>> largeCache; // gameState, corresponding EVs for all decisions, used for output.
     std::vector<Hand> handsToSimulate = { // done manually because the algorithm takes up more space than this
         Hand({Card('7', 'S'), Card('7', 'S'), Card('7', 'S')}),
-        Hand({Card('K', 'S'), Card('J', 'S')}),
+        Hand({Card('7', 'S'), Card('7', 'S'), Card('6', 'S')}),
         Hand({Card('9', 'S'), Card('J', 'S')}),
         Hand({Card('8', 'S'), Card('J', 'S')}),
         Hand({Card('8', 'S'), Card('9', 'S')}),
@@ -76,7 +76,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
         Hand({Card('2', 'S'), Card('2', 'S')})
     };
 
-    int iterations = 1000;
+    int iterations = 100000;
     for (Hand& h : handsToSimulate) {
         std::vector<char> allowedChoices = determineAllowedChoices(h, r, players[0].getBalance(), players[0].getHands().size());
 
@@ -127,13 +127,13 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
                     auto& hres = gr.playerResults["Nevio"];
                     for (handResult& h : hres.handResults) { // because may be more than 1 hand if we for example split
-                        if (not gr.dealerHadBlackjack) {
+                        if (not(gr.dealerHadBlackjack and r.peakAmericanStyle)) {
                             totalHandWinnings += h.handWinnings;
                         }
 
                         if (h.insuranceOutcome != InsuranceOutcome::NotTaken) { totalInsuranceWinnings += h.insuranceWinnings; insuranceIterations++; }
                     }
-                    if (gr.dealerHadBlackjack) { i--; }
+                    if (gr.dealerHadBlackjack and r.peakAmericanStyle) { i--; }
                 }
                 double baseEV = totalHandWinnings / iterations;
                 std::cout << uniqueKey << "base ev for "<<choice<<": " << baseEV << "\n";
