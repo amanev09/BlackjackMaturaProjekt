@@ -2,8 +2,8 @@
 #include <iostream>
 #include <sstream> 
 #include "Shoe.h"
-
-Shoe::Shoe(int size) : deckSize(size), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
+#include <cmath>
+Shoe::Shoe(int size) : deckSize(size) , hiLoCount(0), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
     reset();
 }
 
@@ -25,7 +25,20 @@ void Shoe::reset() {
         }
     }
     shuffle();
+    hiLoCount = 0;
 }
+
+int Shoe::getHiLoCount() {
+    return hiLoCount;
+}
+
+int Shoe::getHiLoTrueCount() {
+    if (cards.empty()) return 0;
+    double decksRemaining = cards.size() / 52.0;
+    double tc = hiLoCount / decksRemaining;
+    return static_cast<int>(std::round(tc));
+}
+
 
 std::string Shoe::shoeKey() { // unique identification key for this shoe(mathematically same), 
     std::vector<int> counts(13,0); // this vector holds the values for all card counts from 1-A
@@ -71,6 +84,8 @@ std::string Shoe::shoeKey() { // unique identification key for this shoe(mathema
 void Shoe::removeCard(char rank, char suit) {
     for (auto it = cards.begin(); it != cards.end(); ++it) {
         if (it->getRank() == rank && it->getSuit() == suit) {
+            // adjust HiLo
+            if (it->getValue() <= 6) { hiLoCount++; } else if (it->getValue() >= 10) { hiLoCount--; }
             cards.erase(it);
             return; // remove only first matching card
         }
@@ -79,19 +94,21 @@ void Shoe::removeCard(char rank, char suit) {
 
 
 Card Shoe::deal() {
-    if (cards.empty()) {
+    if (cards.size()/(deckSize*52.0)<0.25) {
         reset();
-        //////std::cout << "Shuffeled Deck!";
+        //std::cout << "Shuffeled Deck!";
     }
     Card dealtCard = cards.back();
     cards.pop_back();
+    // hiLo adjustment
+    if (dealtCard.getValue() <= 6) { hiLoCount++; } else if (dealtCard.getValue() >= 10) { hiLoCount--; }
     return dealtCard;
 }
 
 // Prints the current cards in the deck to the console
 void Shoe::printShoe() const {
     for (const auto& card : cards) {
-        //////std::cout << card.toString() << " ";
+        //std::cout << card.toString() << " ";
     }
-    //////std::cout << std::endl;
+    //std::cout << std::endl;
 }

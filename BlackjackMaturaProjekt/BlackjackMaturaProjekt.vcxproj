@@ -131,6 +131,7 @@
     <ClCompile Include="basicStrategy.cpp" />
     <ClCompile Include="Blackjack.cpp" />
     <ClCompile Include="Card.cpp" />
+    <ClCompile Include="CountingSim.cpp" />
     <ClCompile Include="Dealer.cpp" />
     <ClCompile Include="determineAllowedChoices.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="basicStrategy.h" />
     <ClInclude Include="Card.h" />
+    <ClInclude Include="countingSim.h" />
     <ClInclude Include="Dealer.h" />
     <ClInclude Include="determineAllowedChoices.h" />
     <ClInclude Include="Game.h" />

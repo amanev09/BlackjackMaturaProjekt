@@ -20,13 +20,17 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 10000000;
+    int iterations = 1000000;
     double preGameBalance = players[0].getBalance();
     for (int i = 0; i < iterations; ++i) {
         shoe.reset();
-        shoe.shuffle();
         // optionally modify deck here
-        //shoe.removeCard('J', 'S');
+        shoe.removeCard('2', 'S');
+        shoe.removeCard('3', 'S');
+        shoe.removeCard('4', 'S');
+        shoe.removeCard('5', 'S');
+        shoe.removeCard('6', 'S');
+        shoe.removeCard('5', 'S');
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
     }
     double postGameBalance = players[0].getBalance();

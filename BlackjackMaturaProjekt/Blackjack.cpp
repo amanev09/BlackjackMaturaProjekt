@@ -9,7 +9,7 @@
 #include "basicStrategy.h"
 #include "strategySimulation.h"
 #include "IOStrategy.h"
-
+#include "countingSim.h"
 int main()
 {
     //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
@@ -38,6 +38,7 @@ int main()
     else {
         loadStrategy(strategy, "basicStrategyForSimulation");
     }
+    //HiLoSim(&strategy);
     strategySimulation(&strategy);
     return 0;
 }

@@ -489,9 +489,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 }
             }
             // sidebet resolution over
-            if (d.getHand().getValue() == 21 && d.getHand().getCardsCount() == 2 and (hand.getCard(0).getValue()+ hand.getCard(1).getValue()) == 11){
-                //std::cout << "hit";
-            }
+
             if (hand.getFlagSurrendered()) { // we surrendered the hand, return bet/2
                 double payout = hand.getBet() / 2;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " had surrendered, payout: " << payout << "\n";
@@ -508,7 +506,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                 hres.handWinnings += payout - hand.getBet();
 
             }
-            else if (hand.getValue() == 21 and hand.getCardsCount() == 2 and not hand.getFlagIsSplitHand()) { // this is a true blackjack
+            else if (hand.getValue() == 21 and hand.getCardsCount() == 2 and not hand.getFlagIsSplitHand()) { // this is a natural blackjack
                 if (hand.getFlagEvenMoney()) {
                     // we have true blackjack with even money, return bet twice because of the 1:1 payout
                     double payout = hand.getBet() * 2;
@@ -537,6 +535,14 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                         hres.handWinnings += payout - hand.getBet();
                     }
                 }
+            }
+            else if (hand.getValue() == 21 and hand.getCardsCount() > 2 and d.getHand().getValue() == 21 && d.getHand().getCardsCount() == 2 and not r.peakAmericanStyle) {
+                // exception with european peek, if we get to 21 (possible because dealer doesnt peek) with more than 2 cards and the dealer does have a natural blackjack, we lose
+                double payout = 0;
+                //std::cout << player.getName() << "'s hand " << i + 1 << " \033[31mloses\033[0m, payout: " << payout << "\n";
+                player.setBalance(player.getBalance() + payout);
+                hres.handOutcome = HandOutcome::lostBy21AgainstDealerBlackjack;
+                hres.handWinnings += payout - hand.getBet();
             }
             else if (hand.getValue() <= 21 and d.getHand().getValue() > 21) {
                 // win
@@ -580,11 +586,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     // remove any split hands and set all flags to false
     d.clearHand();
     for (Player& player : players) {
-        int size = player.getHands().size(); // do it here because when removing hand, size changes
-        for (size_t i = 0; i < size; i++) {
-
-            player.removeHand(0);
-        }
+        player.removeAllHands();
     }
     return gr;
 }

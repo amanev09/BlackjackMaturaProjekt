@@ -11,7 +11,8 @@ enum class HandOutcome : int {
     pushBySameValue = 6,
     lostByLowerValue = 7,
     lostByBust = 8,
-    surrendered = 9
+    lostBy21AgainstDealerBlackjack = 9,
+    surrendered = 10
 };
 
 enum class InsuranceOutcome : int {

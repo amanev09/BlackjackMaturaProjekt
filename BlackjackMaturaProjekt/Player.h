@@ -19,7 +19,7 @@ public:
     Hand& addHand();
 
     void removeHand(int i);
-
+    void removeAllHands();
 
     std::string getName() const noexcept;
 

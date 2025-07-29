@@ -51,6 +51,9 @@
     <ClCompile Include="IOStrategy.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="CountingSim.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Card.h">
@@ -90,6 +93,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="IOStrategy.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="countingSim.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

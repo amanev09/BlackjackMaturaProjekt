@@ -121,7 +121,6 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
 
                 for (int i = 0; i < iterations; ++i) {
                     shoe.reset();
-                    shoe.shuffle();
                     // optionally modify deck here
                     //shoe.removeCard('2', 'S');
                     gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack

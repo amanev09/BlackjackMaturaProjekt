@@ -6,6 +6,7 @@ class Shoe {
     std::vector<Card> cards; // Holds all cards in shoe
     int deckSize;
     std::mt19937 rng;
+    int hiLoCount;
 public:
     Shoe(int size = 1);
 
@@ -22,4 +23,7 @@ public:
 
     // Prints the current cards in the deck to the console
     void printShoe() const;
+
+    int getHiLoCount();
+    int getHiLoTrueCount();
 };

@@ -29,6 +29,9 @@ void Player::removeHand(int i) {
     }
 }
 
+void Player::removeAllHands() {
+    hands.clear();
+}
 
 std::string Player::getName() const noexcept { return name; }
 
