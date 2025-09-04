@@ -12,7 +12,7 @@
 #include "basicStrategy.h"
 std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> basicStrategy() {
 
-    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
 
     std::vector<Player> players;
     GameRules r;

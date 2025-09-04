@@ -16,7 +16,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 1000000;
+    int iterations = 10000000;
     double preGameBalance = players[0].getBalance();
     for (int i = 0; i < iterations; ++i) {
         //shoe.reset();
@@ -24,7 +24,10 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
         //shoe.removeCard('J', 'S');
         std::unordered_map<int, std::string> betSpread = {
             {0, "1"},
+            {1, "2"},
+            {2, "3"},
             {3, "5"},
+            {4, "10"},
         };
         int trueCount = shoe.getHiLoTrueCount();
         if (betSpread.count(trueCount)) {

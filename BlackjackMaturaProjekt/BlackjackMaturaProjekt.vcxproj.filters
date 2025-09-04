@@ -99,4 +99,7 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="basicStrategyForSimulation" />
+  </ItemGroup>
 </Project>
