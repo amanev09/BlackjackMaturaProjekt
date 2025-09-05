@@ -7,6 +7,7 @@ class Shoe {
     int deckSize;
     std::mt19937 rng;
     int hiLoCount;
+    
 public:
     Shoe(int size = 1);
 

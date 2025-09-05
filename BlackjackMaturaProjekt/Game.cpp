@@ -136,7 +136,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
         }
     }
 
-    // first all players get 1 card, then dealer gets 1 card, then all players second card, then dealer second card(hole card which is hidden)
+    // first all players get 1 card, then dealer gets 1 card, then all players second card, (not ENHC) then dealer second card(hole card which is hidden)
     for (Player& player : players) {
         for (Hand& hand : player.getHands()) {
             hand.addCard(getStarterCard("player1"));
@@ -149,7 +149,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             hand.addCard(getStarterCard("player2"));
         }
     }
-    d.addCard(getStarterCard("dealer2"));
+    if(r.peakAmericanStyle){ d.addCard(getStarterCard("dealer2")); }
+    
     // we have given the players their starting cards
     // optional '3rd' starting card to allow simulations like a multi card 21 or a soft 21 with more than 2 cards(specifically 3 cards)
     for (Player& player : players) {
@@ -438,6 +439,8 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     // after all player hands have been played out, the dealer needs to play out his hand
     // dealer first reveals wholecard (print hand function without hiding) and then hits until he reaches a value of greater than 17
     std::cout << "\n--Dealer turn--\n";
+    // give second card when playing ENHC
+    if (not r.peakAmericanStyle) { d.addCard(getStarterCard("dealer2")); }
     std::cout << "Dealer: ";  d.getHand().printHand();
     while (d.getHand().getValue() < 17 or (d.getHand().getValue() == 17 and d.getHand().isSoft() and r.hitSoft17)) { // soft17 = false means h17 rules so hitting
         // as long as dealer is below 16 OR if on 17 AND soft he must hit(depending on rules)

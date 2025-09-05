@@ -1,13 +1,13 @@
 #pragma once
 
 struct GameRules {
-    int deckCount = 8;
+    int deckCount = 1;
     int maxSplitHands = 4; 
     double blackjackPayoutRatio = 3.0 / 2.0;
     bool doubleAfterSplit = true;
     bool hitSoft17 = false;
     bool peakAmericanStyle = false; // otherwise european style, dealer doesnt peak at all until after all player actions are over
-    bool earlySurrenderAllowed = false;
+    bool earlySurrenderAllowed = true;
     bool lateSurrenderAllowed = false;
     bool insuranceAllowed = true;
     bool evenMoneyAllowed = true;
