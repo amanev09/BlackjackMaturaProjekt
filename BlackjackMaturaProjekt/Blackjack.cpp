@@ -12,13 +12,12 @@
 #include "countingSim.h"
 int main()
 {
-    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
     std::vector<Player> players;
     GameRules r;
     players.emplace_back("Nevio");
     Dealer d;
     Shoe shoe(r.deckCount);
-    shoe.shuffle();
 
     std::unordered_map<std::string, Card> startingCards = { 
     {"player1", Card('A', 'S')},
@@ -27,7 +26,7 @@ int main()
         {"dealer2", Card('K', 'S')}
     };
 
-    for (int i = 0; i < 1000; ++i) { blackJack(r, players, d, shoe, nullptr, nullptr, nullptr); }
+    //for (int i = 0; i < 1000; ++i) { blackJack(r, players, d, shoe, nullptr, nullptr, nullptr); }
     bool calc = false;
 
     std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> strategy;
@@ -38,7 +37,8 @@ int main()
     else {
         loadStrategy(strategy, "basicStrategyForSimulation");
     }
-    HiLoSim(&strategy);
     strategySimulation(&strategy);
+    HiLoSim(&strategy);
+    
     return 0;
 }

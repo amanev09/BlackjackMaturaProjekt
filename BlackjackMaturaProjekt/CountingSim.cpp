@@ -16,7 +16,8 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 10000000;
+    int iterations = 1000000;
+    double totalInitialBets = 0;
     double preGameBalance = players[0].getBalance();
     for (int i = 0; i < iterations; ++i) {
         //shoe.reset();
@@ -25,17 +26,22 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
         std::unordered_map<int, std::string> betSpread = {
             {0, "1"},
             {1, "2"},
-            {2, "3"},
-            {3, "5"},
-            {4, "10"},
+            {2, "4"},
+            {3, "8"},
+            {4, "16"},
+            {5, "32"},
+            {6, "50"},
+            {7, "100"},
         };
         int trueCount = shoe.getHiLoTrueCount();
         if (betSpread.count(trueCount)) {
             inputMap["bet"] = betSpread.at(trueCount); // otherwise its default in inputMap
+            totalInitialBets += std::stod(inputMap["numHands"]) * std::stod(betSpread.at(trueCount));
         }
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
+        
     }
     double postGameBalance = players[0].getBalance();
-    std::cout << "Total HiLo + strategy EV: " << 100 * (postGameBalance - preGameBalance) / iterations << "%" << "\n";
+    std::cout << "Total HiLo + strategy EV: " << 100 * (postGameBalance - preGameBalance) / totalInitialBets << "%" << "\n";
 
 }

@@ -21,14 +21,17 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     {"choice", "f"}
     };
     int iterations = 1000000;
+    double totalInitialBets = 0;
     double preGameBalance = players[0].getBalance();
     for (int i = 0; i < iterations; ++i) {
         shoe.reset();
         // optionally modify deck here
         //shoe.removeCard('2', 'S');
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
+        //totalInitialBets += std::stod(inputMap["numHands"]) * std::stod(inputMap["bet"]);
+        totalInitialBets++; // this instead of above because for this simulation here, its always +1
     }
     double postGameBalance = players[0].getBalance();
-    std::cout << "Total strategy EV: " << 100*(postGameBalance - preGameBalance) / iterations<<"%" << "\n";
+    std::cout << "Total strategy EV: " << 100*(postGameBalance - preGameBalance) / totalInitialBets<<"%" << "\n";
     
 }

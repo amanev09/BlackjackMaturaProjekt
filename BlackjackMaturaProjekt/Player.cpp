@@ -1,7 +1,7 @@
 #include "Player.h"
 
 // Constructor to set player name and initialize one hand
-Player::Player(const std::string& playerName) : name(playerName), balance(1000){
+Player::Player(const std::string& playerName) : name(playerName), balance(10000000000000){
     //hands.emplace_back();
 
 }

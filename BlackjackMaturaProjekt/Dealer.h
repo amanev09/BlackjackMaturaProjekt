@@ -1,9 +1,11 @@
 #pragma once
 #include "Card.h"
 #include "Hand.h"
+#include "GameRules.h"
 
 class Dealer {
     Hand hand; // second entry is hole card
+    GameRules r;
 public:
     // Prepare dealer for new round
     void clearHand() noexcept;

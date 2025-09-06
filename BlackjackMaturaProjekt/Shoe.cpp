@@ -3,7 +3,8 @@
 #include <sstream> 
 #include "Shoe.h"
 #include <cmath>
-Shoe::Shoe(int size) : deckSize(size) , hiLoCount(0), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
+Shoe::Shoe(int size) : deckSize(size) , hiLoCount(0),dealtCardsCounter(0), 
+cutCardPosition(0), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
     reset();
 }
 
@@ -11,6 +12,14 @@ Shoe::Shoe(int size) : deckSize(size) , hiLoCount(0), rng(std::random_device{}()
 void Shoe::shuffle() {
 
     std::shuffle(cards.begin(), cards.end(), rng); // Shuffle the deck
+    //std::cout << "Shuffeled the deck!\n";
+}
+
+void Shoe::onNewGameRound() {
+    // quick check if cut card came already, function called whenever new game starts.
+    if (dealtCardsCounter >= cutCardPosition) {
+        reset();
+    }
 }
 
 void Shoe::reset() {
@@ -25,6 +34,9 @@ void Shoe::reset() {
         }
     }
     shuffle();
+    std::uniform_int_distribution<int> dist(static_cast<int>(0.75 * 52*deckSize),static_cast<int>(0.85 * 52 * deckSize));
+    cutCardPosition = dist(rng);
+    dealtCardsCounter = 0;
     hiLoCount = 0;
 }
 
@@ -94,9 +106,13 @@ void Shoe::removeCard(char rank, char suit) {
 
 
 Card Shoe::deal() {
-    if (cards.size()/(deckSize*52.0)<0.25) {
+    dealtCardsCounter++;
+    if (dealtCardsCounter == cutCardPosition) {
+        //std::cout << "Cut card came, finish round and shuffle\n";
+    }
+    if (cards.empty()) {
         reset();
-        std::cout << "Shuffeled Deck!";
+        //std::cout << "Emergency shuffle, shoe at 0 cards\n";
     }
     Card dealtCard = cards.back();
     cards.pop_back();
@@ -108,7 +124,7 @@ Card Shoe::deal() {
 // Prints the current cards in the deck to the console
 void Shoe::printShoe() const {
     for (const auto& card : cards) {
-        std::cout << card.toString() << " ";
+        //std::cout << card.toString() << " ";
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
 }

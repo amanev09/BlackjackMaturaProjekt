@@ -7,12 +7,15 @@ class Shoe {
     int deckSize;
     std::mt19937 rng;
     int hiLoCount;
-    
+    int dealtCardsCounter;
+    double cutCardPosition;
 public:
     Shoe(int size = 1);
 
     // Shuffles deck using random number generator
     void shuffle();
+
+    void onNewGameRound();
 
     void reset();
 

@@ -1,13 +1,13 @@
 #pragma once
-
+// want to make all static to acces gamerules without needing instance, then do proper ENHC, fix other bugs in gamerules
 struct GameRules {
     int deckCount = 1;
     int maxSplitHands = 4; 
     double blackjackPayoutRatio = 3.0 / 2.0;
     bool doubleAfterSplit = true;
     bool hitSoft17 = false;
-    bool peakAmericanStyle = false; // otherwise european style, dealer doesnt peak at all until after all player actions are over
-    bool earlySurrenderAllowed = true;
+    bool peakAmericanStyle = true; // otherwise european style, dealer doesnt peak at all until after all player actions are over
+    bool earlySurrenderAllowed = false;
     bool lateSurrenderAllowed = false;
     bool insuranceAllowed = true;
     bool evenMoneyAllowed = true;

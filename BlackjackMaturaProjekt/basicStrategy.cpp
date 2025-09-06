@@ -12,7 +12,7 @@
 #include "basicStrategy.h"
 std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> basicStrategy() {
 
-    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
 
     std::vector<Player> players;
     GameRules r;
@@ -21,7 +21,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
     Shoe shoe(r.deckCount);
     shoe.shuffle();
     std::unordered_map<std::string, std::string> inputMap = {
-        {"numHands", "1"},
+        {"numHands", "1"}, // Important: correct EV calculation only works when playing with one hand for now
         {"bet", "1"},
         {"earlySurrender", "n"},
         {"evenMoney", "n"},
@@ -113,10 +113,11 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
             std::vector<std::pair<double, std::string>> miniCache; // EV values for given situationkey
             std::vector<std::pair<double, std::unordered_map<std::string, std::string>>> otherMiniCache;
             double totalInsuranceWinnings = 0;
-            int insuranceIterations = 0;
+            double totalInsuranceWager = 0;
             for (char choice : allowedChoices) {
                 inputMap["choice"] = choice;
-
+                
+                double totalHandWager = 0;
                 double totalHandWinnings = 0;
 
                 for (int i = 0; i < iterations; ++i) {
@@ -124,22 +125,29 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     // optionally modify deck here
                     //shoe.removeCard('2', 'S');
                     gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
-                    auto& hres = gr.playerResults["Nevio"];
-                    for (handResult& h : hres.handResults) { // because may be more than 1 hand if we for example split
-                        if (not(gr.dealerHadBlackjack and r.peakAmericanStyle)) {
-                            totalHandWinnings += h.handWinnings;
-                        }
 
-                        if (h.insuranceOutcome != InsuranceOutcome::NotTaken) { totalInsuranceWinnings += h.insuranceWinnings; insuranceIterations++; }
+                    auto& hres = gr.playerResults["Nevio"];
+                    
+                    if (!hres.handResults.empty() and hres.handResults[0].insuranceOutcome != InsuranceOutcome::NotTaken) {
+                        // assumption is that if we simulate with multiple starter hands, that all hands either take or dont take insurance
+                        totalInsuranceWager += std::stod(inputMap["numHands"]) * std::stod(inputMap["bet"]) / 2;
+                        totalInsuranceWinnings += hres.handResults[0].insuranceWinnings * std::stod(inputMap["numHands"]); // winnings same on all hands since bet is same
                     }
-                    if (gr.dealerHadBlackjack and r.peakAmericanStyle) { i--; }
+
+                    if (not(gr.dealerHadBlackjack and r.peakAmericanStyle)) {
+                        totalHandWager += std::stod(inputMap["numHands"]) * std::stod(inputMap["bet"]); // only count initial bets as wagers, exclude splits and doubles
+                        for (handResult& h : hres.handResults) {
+                            totalHandWinnings += h.handWinnings; // count both double and split winnings
+                        }
+                    }
+                    if (gr.dealerHadBlackjack and r.peakAmericanStyle) { i--; } // redo the simulation round
                 }
-                double baseEV = totalHandWinnings / iterations;
+                double baseEV = totalHandWinnings / totalHandWager;
                 std::cout << uniqueKey << "base ev for "<<choice<<": " << baseEV << "\n";
                 miniCache.emplace_back(baseEV, std::string(1, choice));
                 otherMiniCache.emplace_back(baseEV, inputMap);
             }
-            double insuranceEV = insuranceIterations > 0 ? totalInsuranceWinnings / insuranceIterations : 0.0;
+            double insuranceEV = totalInsuranceWager > 0 ? totalInsuranceWinnings / totalInsuranceWager : 0.0;
             std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
             // determine choice of inputMap to be saved inside cache
             std::sort(miniCache.begin(), miniCache.end(),
@@ -191,9 +199,9 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
         const std::string& key = mapEntry.first;
         const std::vector<std::pair<double, std::string>>& vec = mapEntry.second;
 
-        std::cout << "Key: " << key;
+        //std::cout << "Key: " << key;
 
-        std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
+        //std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
     }
     return cache;
 }
