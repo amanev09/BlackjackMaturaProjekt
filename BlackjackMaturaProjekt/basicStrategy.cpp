@@ -12,7 +12,7 @@
 #include "basicStrategy.h"
 std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> basicStrategy() {
 
-    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
 
     std::vector<Player> players;
     GameRules r;
@@ -150,30 +150,44 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
             double insuranceEV = totalInsuranceWager > 0 ? totalInsuranceWinnings / totalInsuranceWager : 0.0;
             std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
             // determine choice of inputMap to be saved inside cache
+            miniCache.emplace_back(-0.5, "lateSurrender"); // lateSurrender EV is always -0.5
             std::sort(miniCache.begin(), miniCache.end(),
                 [](const auto& a, const auto& b) {
                     return a.first > b.first;
                 });
             miniCache.emplace_back(insuranceEV, "insurance");
-
+            
             std::sort(otherMiniCache.begin(), otherMiniCache.end(),
                 [](const auto& a, const auto& b) {
                     return a.first > b.first;
                 });
+
+            if (!otherMiniCache.empty() && r.lateSurrenderAllowed) {
+                const auto& bestPair = otherMiniCache.front();
+                if (bestPair.first < -0.5) { // lateSurrender has better EV than best choice
+                    auto surrenderMap = bestPair.second;
+                    surrenderMap["lateSurrender"] = "y";
+                    surrenderMap["choice"] = "r"; // set to r so we know to remove for 3+ hands
+                    otherMiniCache.emplace(otherMiniCache.begin(), -0.5, std::move(surrenderMap)); // add it as the first element
+                    // if the otherwise best choice has an ev of less than -0.5, the surrenderMap is added.
+                }
+            }
+
             for (auto& pair : otherMiniCache) {
                 pair.second["insurance"] = insuranceEV > 0 ? "y" : "n";
             }
             // optionally calculate surrender map(ev always -0.5)
+
             cache[uniqueKey] = otherMiniCache;
             largeCache[uniqueKey] = miniCache;
-
+            // remove options for 3+ cards (double, split, surrender)
             otherMiniCache.erase(
                 std::remove_if(
                     otherMiniCache.begin(),
                     otherMiniCache.end(),
                     [](const auto& entry) {
                         const auto& choice = entry.second.at("choice");
-                        return choice == "d" || choice == "p";
+                        return choice == "d" || choice == "p" || choice == "r";
                     }
                 ),
                 otherMiniCache.end()
@@ -184,7 +198,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     miniCache.begin(),
                     miniCache.end(),
                     [](const std::pair<double, std::string>& entry) {
-                        return entry.second == "d" || entry.second == "p";
+                        return entry.second == "d" || entry.second == "p" || entry.second == "r";
                     }
                 ),
                 miniCache.end()
@@ -199,9 +213,9 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
         const std::string& key = mapEntry.first;
         const std::vector<std::pair<double, std::string>>& vec = mapEntry.second;
 
-        //std::cout << "Key: " << key;
+        std::cout << "Key: " << key;
 
-        //std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
+        std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
     }
     return cache;
 }

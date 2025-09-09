@@ -12,7 +12,7 @@ cutCardPosition(0), rng(std::random_device{}()) { // constructor initializes sho
 void Shoe::shuffle() {
 
     std::shuffle(cards.begin(), cards.end(), rng); // Shuffle the deck
-    //std::cout << "Shuffeled the deck!\n";
+    std::cout << "Shuffeled the deck!\n";
 }
 
 void Shoe::onNewGameRound() {
@@ -108,11 +108,11 @@ void Shoe::removeCard(char rank, char suit) {
 Card Shoe::deal() {
     dealtCardsCounter++;
     if (dealtCardsCounter == cutCardPosition) {
-        //std::cout << "Cut card came, finish round and shuffle\n";
+        std::cout << "Cut card came, finish round and shuffle\n";
     }
     if (cards.empty()) {
         reset();
-        //std::cout << "Emergency shuffle, shoe at 0 cards\n";
+        std::cout << "Emergency shuffle, shoe at 0 cards\n";
     }
     Card dealtCard = cards.back();
     cards.pop_back();
@@ -124,7 +124,7 @@ Card Shoe::deal() {
 // Prints the current cards in the deck to the console
 void Shoe::printShoe() const {
     for (const auto& card : cards) {
-        //std::cout << card.toString() << " ";
+        std::cout << card.toString() << " ";
     }
-    //std::cout << std::endl;
+    std::cout << std::endl;
 }

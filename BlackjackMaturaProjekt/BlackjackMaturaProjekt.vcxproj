@@ -139,6 +139,7 @@
     <ClCompile Include="Hand.cpp" />
     <ClCompile Include="IOStrategy.cpp" />
     <ClCompile Include="makeUniqueKey.cpp" />
+    <ClCompile Include="Online_stats.h" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shoe.cpp" />
     <ClCompile Include="strategySimulation.cpp" />
