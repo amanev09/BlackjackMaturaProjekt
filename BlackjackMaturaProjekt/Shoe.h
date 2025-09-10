@@ -9,6 +9,8 @@ class Shoe {
     int hiLoCount;
     int dealtCardsCounter;
     double cutCardPosition;
+    double cutCardLower = 0.75;
+    double cutCardUpper = 0.85;
 public:
     Shoe(int size = 1);
 
@@ -18,6 +20,8 @@ public:
     void onNewGameRound();
 
     void reset();
+
+    double setHiLoTrueCount(double trueCount); // double because we want to see EV difference between TC of 3 and 3.5 too, bad fractional TC's might be difficult to achieve naturally
 
     std::string shoeKey();
 

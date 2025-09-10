@@ -64,7 +64,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     double variance = weightedStats.variance();
     double sd= weightedStats.sd();
     double sem = weightedStats.sem();
-    std::cout << "Total HiLo + strategy EV: "<<EV * 100 << "%" <<" with a standard error of the mean of: "<<sem*100<<"%" << "\n";
-    std::cout << "Variance: " << variance << std::endl;
-    std::cout << "Standard  deviation: " << sd << std::endl;
+    //std::cout << "Total HiLo + strategy EV: "<<EV * 100 << "%" <<" with a standard error of the mean of: "<<sem*100<<"%" << "\n";
+    //std::cout << "Variance: " << variance << std::endl;
+    //std::cout << "Standard  deviation: " << sd << std::endl;
 }

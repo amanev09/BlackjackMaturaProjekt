@@ -12,7 +12,7 @@
 #include "basicStrategy.h"
 std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> basicStrategy() {
 
-    std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
+    //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
 
     std::vector<Player> players;
     GameRules r;
@@ -143,12 +143,12 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     if (gr.dealerHadBlackjack and r.peakAmericanStyle) { i--; } // redo the simulation round
                 }
                 double baseEV = totalHandWinnings / totalHandWager;
-                std::cout << uniqueKey << "base ev for "<<choice<<": " << baseEV << "\n";
+                //std::cout << uniqueKey << "base ev for "<<choice<<": " << baseEV << "\n";
                 miniCache.emplace_back(baseEV, std::string(1, choice));
                 otherMiniCache.emplace_back(baseEV, inputMap);
             }
             double insuranceEV = totalInsuranceWager > 0 ? totalInsuranceWinnings / totalInsuranceWager : 0.0;
-            std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
+            //std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
             // determine choice of inputMap to be saved inside cache
             miniCache.emplace_back(-0.5, "lateSurrender"); // lateSurrender EV is always -0.5
             std::sort(miniCache.begin(), miniCache.end(),
@@ -213,9 +213,9 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
         const std::string& key = mapEntry.first;
         const std::vector<std::pair<double, std::string>>& vec = mapEntry.second;
 
-        std::cout << "Key: " << key;
+        //std::cout << "Key: " << key;
 
-        std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
+        //std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
     }
     return cache;
 }
