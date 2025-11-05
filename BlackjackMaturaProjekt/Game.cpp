@@ -165,8 +165,9 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             }
         }
     }
-    // quick print unique game key (identifier)q
+    // quick print unique game key (identifier)
     std::string gameKey = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].getCardsCount(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);
+    
     ////std::cout << gameKey;
     // starting from here, we will also pass the 
     // before we start with pregame checks, offer early surrender if allowed
@@ -288,6 +289,11 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
         if (d.getHand().getValue() == 21) {
             // dealer blackjack, end round!
             flagRoundEnd = true;
+        }
+        else {
+            if (r.peakAmericanStyle and d.getUpCard().getRank() == 'A') {
+                //std::cout << "No dealer blackjack!\n";
+            }
         }
 
     }
@@ -478,7 +484,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             handResult& hres = gr.playerResults[player.getName()].handResults[i];
             hres.isSplitHand = hand.getFlagIsSplitHand(); // add that info to the return
             hres.resolutionBet = hand.getBet(); // also important for EV calc
-            // TODO: New EV calculation that takes into account handBet. New variable totalWagered, for split hands add up all bets for all hands in each round. Derive the winnings
+            
             if (player.getHands()[i].getSideBet("insurance")) {
                 // if we took insurance
                 if (d.getHand().getValue() == 21 and d.getHand().getCardsCount() == 2) {

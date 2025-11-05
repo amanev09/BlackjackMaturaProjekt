@@ -4,6 +4,7 @@
 #include "Game.h"
 #include "strategySimulation.h"
 #include "Online_stats.h"
+#include "countingStrategyEnum.h"
 
 void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>>* strategy) {
     std::vector<Player> players;
@@ -23,13 +24,13 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 1000000;
+    int iterations = 100;
     double counts = 0;
     for (int i = 0; i < iterations; ++i) {
         //shoe.reset();
         // optionally modify deck here
         //shoe.removeCard('2', 'S');
-        counts+= shoe.setHiLoTrueCount(6);
+        //counts+= shoe.setHiLoTrueCount(6);
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
         
         auto& hres = gr.playerResults["Nevio"];
@@ -45,7 +46,7 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     double sd = stats.sd();
     double sem = stats.sem();
 
-    std::cout << "Total strategy EV: " << 100.0* EV <<"% with a standard error of the mean of "<<sem*100<<"%, average hiLo count was: "<< counts / (static_cast<double>(iterations)) << "\n";
-    std::cout << "Variance: " << variance << std::endl;
-    std::cout << "Standard deviation: " << sd << std::endl;
+    //std::cout << "Total strategy EV: " << 100.0* EV <<"% with a standard error of the mean of "<<sem*100<<"%, average hiLo count was: "<< counts / (static_cast<double>(iterations)) << "\n";
+    //std::cout << "Variance: " << variance << std::endl;
+    //std::cout << "Standard deviation: " << sd << std::endl;
 }

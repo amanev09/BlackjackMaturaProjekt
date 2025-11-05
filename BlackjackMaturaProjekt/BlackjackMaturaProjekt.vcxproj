@@ -135,8 +135,10 @@
     <ClCompile Include="CountingSim.cpp" />
     <ClCompile Include="Dealer.cpp" />
     <ClCompile Include="determineAllowedChoices.cpp" />
+    <ClCompile Include="deviationSimulation.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Hand.cpp" />
+    <ClCompile Include="insuranceSim.cpp" />
     <ClCompile Include="IOStrategy.cpp" />
     <ClCompile Include="makeUniqueKey.cpp" />
     <ClCompile Include="Online_stats.h" />
@@ -150,9 +152,11 @@
     <ClInclude Include="countingSim.h" />
     <ClInclude Include="Dealer.h" />
     <ClInclude Include="determineAllowedChoices.h" />
+    <ClInclude Include="deviationSimulation.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameRules.h" />
     <ClInclude Include="Hand.h" />
+    <ClInclude Include="insuranceSim.h" />
     <ClInclude Include="IOStrategy.h" />
     <ClInclude Include="makeUniqueKey.h" />
     <ClInclude Include="Outcomes.h" />
@@ -162,6 +166,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="basicStrategyForSimulation" />
+    <None Include="basicStrategyForSimulationCount5" />
+    <None Include="deviationStrategyTest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

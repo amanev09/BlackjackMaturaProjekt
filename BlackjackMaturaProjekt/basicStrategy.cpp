@@ -10,6 +10,8 @@
 #include "makeUniqueKey.h"
 #include "determineAllowedChoices.h"
 #include "basicStrategy.h"
+#include "countingStrategyEnum.h"
+
 std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> basicStrategy() {
 
     //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
@@ -102,21 +104,20 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
             }
 
             startingCards.insert_or_assign("dealer1", Card(c, 'S')); // assign when it doesnt exist, insert when it does
-
             std::string uniqueKey = makeUniqueKey(h.getValue(), 2, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
             if (h.getValue() == 21) {
-                uniqueKey = makeUniqueKey(h.getValue(), 2, true, h.isSplittable(), startingCards.at("dealer1").getValue(), shoe); 
+                uniqueKey = makeUniqueKey(h.getValue(), 2, true, h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
                 // there is no hard 21 with 2 cards, only soft, so manually add entry
             }
             std::string uniqueKeyMultiCard = makeUniqueKey(h.getValue(), 3, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
             // correct starting cards now assigned
             std::vector<std::pair<double, std::string>> miniCache; // EV values for given situationkey
-            std::vector<std::pair<double, std::unordered_map<std::string, std::string>>> otherMiniCache;
+            std::vector<std::pair<double, std::unordered_map<std::string, std::string>>> otherMiniCache; // Input maps with corresponding EV value, used by simulation
             double totalInsuranceWinnings = 0;
             double totalInsuranceWager = 0;
             for (char choice : allowedChoices) {
                 inputMap["choice"] = choice;
-                
+
                 double totalHandWager = 0;
                 double totalHandWinnings = 0;
 
@@ -124,10 +125,11 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     shoe.reset();
                     // optionally modify deck here
                     //shoe.removeCard('2', 'S');
+                    shoe.setHiLoTrueCount(5);
                     gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
 
                     auto& hres = gr.playerResults["Nevio"];
-                    
+
                     if (!hres.handResults.empty() and hres.handResults[0].insuranceOutcome != InsuranceOutcome::NotTaken) {
                         // assumption is that if we simulate with multiple starter hands, that all hands either take or dont take insurance
                         totalInsuranceWager += std::stod(inputMap["numHands"]) * std::stod(inputMap["bet"]) / 2;
@@ -143,12 +145,12 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     if (gr.dealerHadBlackjack and r.peakAmericanStyle) { i--; } // redo the simulation round
                 }
                 double baseEV = totalHandWinnings / totalHandWager;
-                //std::cout << uniqueKey << "base ev for "<<choice<<": " << baseEV << "\n";
+                std::cout << uniqueKey << "base ev for " << choice << ": " << baseEV << "\n";
                 miniCache.emplace_back(baseEV, std::string(1, choice));
                 otherMiniCache.emplace_back(baseEV, inputMap);
             }
             double insuranceEV = totalInsuranceWager > 0 ? totalInsuranceWinnings / totalInsuranceWager : 0.0;
-            //std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
+            std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
             // determine choice of inputMap to be saved inside cache
             miniCache.emplace_back(-0.5, "lateSurrender"); // lateSurrender EV is always -0.5
             std::sort(miniCache.begin(), miniCache.end(),
@@ -156,7 +158,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     return a.first > b.first;
                 });
             miniCache.emplace_back(insuranceEV, "insurance");
-            
+
             std::sort(otherMiniCache.begin(), otherMiniCache.end(),
                 [](const auto& a, const auto& b) {
                     return a.first > b.first;
@@ -207,6 +209,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
 
             cache[uniqueKeyMultiCard] = otherMiniCache;
             largeCache[uniqueKeyMultiCard] = miniCache;
+            
         }
     }
     for (const auto& mapEntry : largeCache) {

@@ -1,7 +1,7 @@
 #pragma once
 // want to make all static to acces gamerules without needing instance, then do proper ENHC, fix other bugs in gamerules
 struct GameRules {
-    int deckCount = 8;
+    int deckCount = 6;
     int maxSplitHands = 4; 
     double blackjackPayoutRatio = 3.0 / 2.0;
     bool doubleAfterSplit = true;

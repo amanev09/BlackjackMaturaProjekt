@@ -1,5 +1,6 @@
 #include "countingSim.h"
 #include "Online_stats.h"
+#include "countingStrategyEnum.h"
 
 void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>>* strategy) {
     std::vector<Player> players;
@@ -18,7 +19,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 1000000;
+    int iterations = 10000000;
 
     std::unordered_map<int, std::string> betSpread = {
     {0, "1"},
@@ -44,19 +45,27 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
         if (betSpread.count(trueCount)) {
             inputMap["bet"] = betSpread.at(trueCount); // otherwise its default in inputMap
         }
+        if (trueCount > 3) {
+            //inputMap["insurance"] = "y";
+            //inputMap["evenMoney"] = "y";
+        }
+        else {
+            inputMap["insurance"] = "n";
+            inputMap["evenMoney"] = "n";
+        }
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
 
         auto& hres = gr.playerResults["Nevio"];
         double initialBet = 0;
         if (betSpread.count(trueCount)) {
-            initialBet = std::stod(inputMap["numHands"]) * std::stod(betSpread.at(trueCount));
+            initialBet = std::stod(betSpread.at(trueCount));
         }
         else {
             initialBet += std::stod(inputMap["bet"]);
         }
          
         double netProfit = 0;
-        for (handResult& h : hres.handResults) { netProfit += h.handWinnings; }
+        for (handResult& h : hres.handResults) { netProfit += (h.handWinnings+h.insuranceWinnings);} // EV calculated per initial wager, so no need to incclude insurance wager in calc.
         double x = netProfit / initialBet;
         weightedStats.add(x, initialBet);
     }
@@ -64,7 +73,8 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     double variance = weightedStats.variance();
     double sd= weightedStats.sd();
     double sem = weightedStats.sem();
-    //std::cout << "Total HiLo + strategy EV: "<<EV * 100 << "%" <<" with a standard error of the mean of: "<<sem*100<<"%" << "\n";
-    //std::cout << "Variance: " << variance << std::endl;
-    //std::cout << "Standard  deviation: " << sd << std::endl;
+
+    std::cout << "Total HiLo + strategy EV: "<<EV * 100 << "%" <<" with a standard error of the mean of: "<<sem*100<<"%" << "\n";
+    std::cout << "Variance: " << variance << std::endl;
+    std::cout << "Standard  deviation: " << sd << std::endl;
 }

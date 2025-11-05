@@ -8,6 +8,7 @@ class Shoe {
     std::mt19937 rng;
     int hiLoCount;
     int dealtCardsCounter;
+    int tenValueCardsPlayed;
     double cutCardPosition;
     double cutCardLower = 0.75;
     double cutCardUpper = 0.85;
@@ -34,4 +35,8 @@ public:
 
     int getHiLoCount();
     int getHiLoTrueCount();
+
+    double getPTen(); // density of ten value cards in shoe
+
+    std::vector<Card> getCardsVector();
 };

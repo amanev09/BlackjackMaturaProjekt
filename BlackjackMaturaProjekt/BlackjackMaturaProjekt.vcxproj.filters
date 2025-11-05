@@ -57,6 +57,12 @@
     <ClCompile Include="Online_stats.h">
       <Filter>Headerdateien</Filter>
     </ClCompile>
+    <ClCompile Include="insuranceSim.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="deviationSimulation.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Card.h">
@@ -101,8 +107,16 @@
     <ClInclude Include="countingSim.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="insuranceSim.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="deviationSimulation.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="basicStrategyForSimulation" />
+    <None Include="basicStrategyForSimulationCount5" />
+    <None Include="deviationStrategyTest" />
   </ItemGroup>
 </Project>

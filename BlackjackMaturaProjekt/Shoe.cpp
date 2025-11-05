@@ -4,7 +4,7 @@
 #include "Shoe.h"
 #include <cmath>
 Shoe::Shoe(int size) : deckSize(size) , hiLoCount(0),dealtCardsCounter(0), 
-cutCardPosition(0), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
+cutCardPosition(0),tenValueCardsPlayed(0), rng(std::random_device{}()) { // constructor initializes shoe with 52 cards or multiple of 52 if specified.
     reset();
 }
 
@@ -38,6 +38,7 @@ void Shoe::reset() {
     cutCardPosition = dist(rng);
     dealtCardsCounter = 0;
     hiLoCount = 0;
+    tenValueCardsPlayed = 0;
 }
 
 int Shoe::getHiLoCount() {
@@ -82,9 +83,11 @@ double Shoe::setHiLoTrueCount(double TC) {
                 cards.pop_back();
                 dealtCardsCounter++;
                 if (c.getValue() <= 6) { hiLoCount++; } else if (c.getValue() >= 10) { hiLoCount--; }
+                if (c.getValue() == 10) { tenValueCardsPlayed++; }
             }
         }
     }
+    shuffle(); // if we dont shuffle here, the first card after the burning to get the TC will be biased due to the nature of the algorithm. Shuffling ensures homogenous deck
     // shoe now has desired count using resevoir sampling
     return hiLoCount / (cards.size() / 52.0);
 }
@@ -135,12 +138,23 @@ void Shoe::removeCard(char rank, char suit) {
         if (it->getRank() == rank && it->getSuit() == suit) {
             // adjust HiLo
             if (it->getValue() <= 6) { hiLoCount++; } else if (it->getValue() >= 10) { hiLoCount--; }
+            if (it->getValue() == 10) { tenValueCardsPlayed++; }
             cards.erase(it);
             return; // remove only first matching card
         }
     }
 }
 
+double Shoe::getPTen() {
+    double tCount = 0;
+    for (Card& c : cards) {
+        if (c.getValue() == 10) {
+            tCount++;
+        }
+    }
+    return tCount / static_cast<double>(cards.size());
+    //return (static_cast<double>(deckSize * 16 - tenValueCardsPlayed)) / (static_cast<double>(cards.size()));
+}
 
 Card Shoe::deal() {
     dealtCardsCounter++;
@@ -155,7 +169,12 @@ Card Shoe::deal() {
     cards.pop_back();
     // hiLo adjustment
     if (dealtCard.getValue() <= 6) { hiLoCount++; } else if (dealtCard.getValue() >= 10) { hiLoCount--; }
+    if (dealtCard.getValue() == 10) { tenValueCardsPlayed++; }
     return dealtCard;
+}
+
+std::vector<Card> Shoe::getCardsVector() {
+    return cards;
 }
 
 // Prints the current cards in the deck to the console
