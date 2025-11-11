@@ -1,3 +1,4 @@
+#include <fstream>
 #include "countingSim.h"
 #include "Online_stats.h"
 #include "countingStrategyEnum.h"
@@ -19,7 +20,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 10000000;
+    int iterations = 30000;
 
     std::unordered_map<int, std::string> betSpread = {
     {0, "1"},
@@ -37,6 +38,9 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {12, "100"},
     };
 
+    double globalNetProfit = 0;
+    int moduluFactor = 1;
+    std::vector<double> bankrollHistory;
     for (int i = 0; i < iterations; ++i) {
         //shoe.reset();
         // optionally modify deck here
@@ -68,6 +72,10 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
         for (handResult& h : hres.handResults) { netProfit += (h.handWinnings+h.insuranceWinnings);} // EV calculated per initial wager, so no need to incclude insurance wager in calc.
         double x = netProfit / initialBet;
         weightedStats.add(x, initialBet);
+		globalNetProfit += netProfit;
+        if (i % moduluFactor == 0) {
+            bankrollHistory.push_back(globalNetProfit);
+        }
     }
     double EV = weightedStats.weightedMean;
     double variance = weightedStats.variance();
@@ -77,4 +85,13 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     std::cout << "Total HiLo + strategy EV: "<<EV * 100 << "%" <<" with a standard error of the mean of: "<<sem*100<<"%" << "\n";
     std::cout << "Variance: " << variance << std::endl;
     std::cout << "Standard  deviation: " << sd << std::endl;
+
+    std::ofstream bankrollFile("bankrollHistory_countingSim.csv");
+    bankrollFile << "Round,Bankroll\n";
+
+    for (size_t i = 0; i < bankrollHistory.size(); ++i) {
+        bankrollFile << i * moduluFactor << "," << bankrollHistory[i] << "\n";
+    }
+
+    bankrollFile.close();
 }

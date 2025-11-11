@@ -49,10 +49,9 @@ int main()
         else {
             loadStrategy(strategy, "basicStrategyForSimulation");
         }
-        devStrat = deviationStrategy(&strategy);
-        saveStrategy(devStrat, "deviationStrategyTest");
-        //strategySimulation(&strategy);
-        //HiLoSim(&strategy);
+        //devStrat = deviationStrategy(&strategy);
+        strategySimulation(&strategy);
+        HiLoSim(&strategy);
         //insuranceSimulation();
     
     return 0;

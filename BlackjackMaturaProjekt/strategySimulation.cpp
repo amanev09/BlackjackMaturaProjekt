@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 #include "Game.h"
 #include "strategySimulation.h"
@@ -24,8 +25,11 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 100;
+    int iterations = 1000000;
     double counts = 0;
+	double globalNetProfit = 0;
+    int moduluFactor = 20;
+    std::vector<double> bankrollHistory;
     for (int i = 0; i < iterations; ++i) {
         //shoe.reset();
         // optionally modify deck here
@@ -39,6 +43,10 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
         for (handResult& h : hres.handResults) {netProfit += h.handWinnings;}
         double x = netProfit / initialBet;
         stats.add(x); // averages the EV results of my simulation
+		globalNetProfit += netProfit;
+        if (i % moduluFactor == 0) {
+			bankrollHistory.push_back(globalNetProfit);
+        }
     }
 
     double EV = stats.mean;
@@ -46,7 +54,16 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     double sd = stats.sd();
     double sem = stats.sem();
 
-    //std::cout << "Total strategy EV: " << 100.0* EV <<"% with a standard error of the mean of "<<sem*100<<"%, average hiLo count was: "<< counts / (static_cast<double>(iterations)) << "\n";
-    //std::cout << "Variance: " << variance << std::endl;
-    //std::cout << "Standard deviation: " << sd << std::endl;
+    std::cout << "Total strategy EV: " << 100.0* EV <<"% with a standard error of the mean of "<<sem*100<<"%, average hiLo count was: "<< counts / (static_cast<double>(iterations)) << "\n";
+    std::cout << "Variance: " << variance << std::endl;
+    std::cout << "Standard deviation: " << sd << std::endl;
+
+	std::ofstream bankrollFile("bankrollHistory_strategySimulation.csv");
+    bankrollFile << "Round,Bankroll\n";
+
+    for (size_t i = 0; i < bankrollHistory.size(); ++i) {
+        bankrollFile << i* moduluFactor << "," << bankrollHistory[i] << "\n";
+    }
+
+    bankrollFile.close();
 }
