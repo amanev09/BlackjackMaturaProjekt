@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/BlackjackMaturaProjekt/bankrollHistory_countingSim.csv
+/BlackjackMaturaProjekt/bankrollHistory_strategySimulation.csv
+/BlackjackMaturaProjekt/bankrollHistory_strategySimulation.csv
+/BlackjackMaturaProjekt/bankrollHistory_countingSim.csv
