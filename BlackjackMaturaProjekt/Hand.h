@@ -2,12 +2,13 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
-
+#include "GameRules.h"
 #include "Card.h"
 
 
 class Hand {
     std::vector<Card> cards; // cards in hand
+    GameRules r;
     double bet = 0; // bet is specific to each hand, not player
     bool flagIsInTheGame = true; // is the hand still in the game and therefore needs to be prompted for actions?
     bool flagIsHandResolved = false; // has the hand already been resolved? If not, we need to resolve it at the end of the game. Important for surrender
@@ -48,7 +49,7 @@ public:
 
     bool isSoft();
 
-    bool isSplittable();
+    bool isSplittable(int playerhandSize);
 
     Card getCard(int i = 0) const;
 

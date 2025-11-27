@@ -20,7 +20,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 30000;
+    
 
     std::unordered_map<int, std::string> betSpread = {
     {0, "1"},
@@ -37,7 +37,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     {11, "100"},
     {12, "100"},
     };
-
+    int iterations = 1000000;
     double globalNetProfit = 0;
     int moduluFactor = 1;
     std::vector<double> bankrollHistory;
@@ -48,14 +48,6 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
         int trueCount = shoe.getHiLoTrueCount();
         if (betSpread.count(trueCount)) {
             inputMap["bet"] = betSpread.at(trueCount); // otherwise its default in inputMap
-        }
-        if (trueCount > 3) {
-            //inputMap["insurance"] = "y";
-            //inputMap["evenMoney"] = "y";
-        }
-        else {
-            inputMap["insurance"] = "n";
-            inputMap["evenMoney"] = "n";
         }
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
 

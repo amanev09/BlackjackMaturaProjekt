@@ -26,8 +26,8 @@ struct handResult {
     HandOutcome handOutcome; // holds the resolution data for each hand (how did we lose/win) *this is a must set*
     InsuranceOutcome insuranceOutcome = InsuranceOutcome::NotTaken; // holds resolution data for insurance, by default set on no insurance taken
     double resolutionBet; // bet at resolution of hand(eg doubling and splitting is accounted for here)
-    double initialBet;
-    double handWinnings = 0; // only winnings not wager
+	double initialBet; // bet at start of hand(before doubling and splitting)
+    double handWinnings = 0; // only winnings not wager, negative if lost
     double insuranceWinnings = 0;
     bool isSplitHand; 
 };

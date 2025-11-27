@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <map>
 #include <algorithm>
+#include "fstream"
 
 #include "Game.h"
 #include "makeUniqueKey.h"
@@ -29,7 +30,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
         {"evenMoney", "n"},
         {"insurance", "y"},
         {"lateSurrender", "n"},
-        {"choice", "s"}
+        {"choice", "f"}
     };
     std::unordered_map<std::string, Card> startingCards = { // empty because loop overrides it
         {"player1", Card('7', 'S')},
@@ -40,42 +41,42 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
     std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> cache; // gameState, corresponding inputMap, used by simulation
     std::map<std::string, std::vector<std::pair<double, std::string>>> largeCache; // gameState, corresponding EVs for all decisions, used for output.
     std::vector<Hand> handsToSimulate = { // done manually because the algorithm takes up more space than this
-        Hand({Card('7', 'S'), Card('7', 'S'), Card('7', 'S')}),
-        Hand({Card('7', 'S'), Card('7', 'S'), Card('6', 'S')}),
-        Hand({Card('9', 'S'), Card('J', 'S')}),
-        Hand({Card('8', 'S'), Card('J', 'S')}),
-        Hand({Card('8', 'S'), Card('9', 'S')}),
-        Hand({Card('7', 'S'), Card('9', 'S')}),
-        Hand({Card('6', 'S'), Card('9', 'S')}),
-        Hand({Card('5', 'S'), Card('9', 'S')}),
-        Hand({Card('4', 'S'), Card('9', 'S')}),
-        Hand({Card('3', 'S'), Card('9', 'S')}),
-        Hand({Card('2', 'S'), Card('9', 'S')}),
-        Hand({Card('2', 'S'), Card('8', 'S')}),
-        Hand({Card('2', 'S'), Card('7', 'S')}),
-        Hand({Card('2', 'S'), Card('6', 'S')}),
-        Hand({Card('2', 'S'), Card('5', 'S')}),
-        Hand({Card('2', 'S'), Card('4', 'S')}),
-        Hand({Card('2', 'S'), Card('3', 'S')}), // soft vals now
-        Hand({Card('4', 'S'), Card('6', 'S'), Card('A', 'S')}),
-        Hand({Card('A', 'S'), Card('9', 'S')}),
-        Hand({Card('A', 'S'), Card('8', 'S')}),
-        Hand({Card('A', 'S'), Card('7', 'S')}),
-        Hand({Card('A', 'S'), Card('6', 'S')}),
-        Hand({Card('A', 'S'), Card('5', 'S')}),
-        Hand({Card('A', 'S'), Card('4', 'S')}),
-        Hand({Card('A', 'S'), Card('3', 'S')}),
-        Hand({Card('A', 'S'), Card('2', 'S')}), // split vals now
-        Hand({Card('A', 'S'), Card('A', 'S')}),
-        Hand({Card('K', 'S'), Card('K', 'S')}),
-        Hand({Card('9', 'S'), Card('9', 'S')}),
-        Hand({Card('8', 'S'), Card('8', 'S')}),
-        Hand({Card('7', 'S'), Card('7', 'S')}),
-        Hand({Card('6', 'S'), Card('6', 'S')}),
-        Hand({Card('5', 'S'), Card('5', 'S')}),
-        Hand({Card('4', 'S'), Card('4', 'S')}),
-        Hand({Card('3', 'S'), Card('3', 'S')}),
-        Hand({Card('2', 'S'), Card('2', 'S')})
+    Hand({Card('7', 'S'), Card('7', 'S'), Card('7', 'S')}),
+    Hand({Card('7', 'S'), Card('7', 'S'), Card('6', 'S')}),
+    Hand({Card('9', 'S'), Card('J', 'S')}),
+    Hand({Card('8', 'S'), Card('J', 'S')}),
+    Hand({Card('8', 'S'), Card('9', 'S')}),
+    Hand({Card('7', 'S'), Card('9', 'S')}),
+    Hand({Card('6', 'S'), Card('9', 'S')}),
+    Hand({Card('5', 'S'), Card('9', 'S')}),
+    Hand({Card('4', 'S'), Card('9', 'S')}),
+    Hand({Card('3', 'S'), Card('9', 'S')}),
+    Hand({Card('2', 'S'), Card('9', 'S')}), // hard 11
+    Hand({Card('4', 'S'), Card('6', 'S'), Card('A', 'S')}), // soft values need atleast hard 12
+    Hand({Card('A', 'S'), Card('9', 'S')}),
+    Hand({Card('A', 'S'), Card('8', 'S')}),
+    Hand({Card('A', 'S'), Card('7', 'S')}),
+    Hand({Card('A', 'S'), Card('6', 'S')}),
+    Hand({Card('A', 'S'), Card('5', 'S')}),
+    Hand({Card('A', 'S'), Card('4', 'S')}),
+    Hand({Card('A', 'S'), Card('3', 'S')}),
+    Hand({Card('A', 'S'), Card('2', 'S')}),
+    Hand({Card('2', 'S'), Card('8', 'S')}), // hard values below 10 need all soft values except A,A
+    Hand({Card('2', 'S'), Card('7', 'S')}),
+    Hand({Card('2', 'S'), Card('6', 'S')}),
+    Hand({Card('2', 'S'), Card('5', 'S')}),
+    Hand({Card('2', 'S'), Card('4', 'S')}),
+    Hand({Card('2', 'S'), Card('3', 'S')}),
+    Hand({Card('A', 'S'), Card('A', 'S')}), // split vals now
+    Hand({Card('K', 'S'), Card('K', 'S')}),
+    Hand({Card('9', 'S'), Card('9', 'S')}),
+    Hand({Card('8', 'S'), Card('8', 'S')}),
+    Hand({Card('7', 'S'), Card('7', 'S')}),
+    Hand({Card('6', 'S'), Card('6', 'S')}),
+    Hand({Card('5', 'S'), Card('5', 'S')}),
+    Hand({Card('4', 'S'), Card('4', 'S')}),
+    Hand({Card('3', 'S'), Card('3', 'S')}),
+    Hand({Card('2', 'S'), Card('2', 'S')})
     };
 
     int iterations = 100000;
@@ -104,12 +105,12 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
             }
 
             startingCards.insert_or_assign("dealer1", Card(c, 'S')); // assign when it doesnt exist, insert when it does
-            std::string uniqueKey = makeUniqueKey(h.getValue(), 2, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
+            std::string uniqueKey = makeUniqueKey(h.getValue(), 2, h.isSoft(), h.isSplittable(players.back().getHands().size()), startingCards.at("dealer1").getValue(), shoe);
             if (h.getValue() == 21) {
-                uniqueKey = makeUniqueKey(h.getValue(), 2, true, h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
+                uniqueKey = makeUniqueKey(h.getValue(), 2, true, h.isSplittable(players.back().getHands().size()), startingCards.at("dealer1").getValue(), shoe);
                 // there is no hard 21 with 2 cards, only soft, so manually add entry
             }
-            std::string uniqueKeyMultiCard = makeUniqueKey(h.getValue(), 3, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
+            std::string uniqueKeyMultiCard = makeUniqueKey(h.getValue(), 3, h.isSoft(), h.isSplittable(players.back().getHands().size()), startingCards.at("dealer1").getValue(), shoe);
             // correct starting cards now assigned
             std::vector<std::pair<double, std::string>> miniCache; // EV values for given situationkey
             std::vector<std::pair<double, std::unordered_map<std::string, std::string>>> otherMiniCache; // Input maps with corresponding EV value, used by simulation
@@ -122,12 +123,10 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                 double totalHandWinnings = 0;
 
                 for (int i = 0; i < iterations; ++i) {
-                    shoe.reset();
                     // optionally modify deck here
                     //shoe.removeCard('2', 'S');
-                    shoe.setHiLoTrueCount(5);
+                    shoe.setHiLoTrueCount(0);
                     gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, &cache); // play one game of blackjack
-
                     auto& hres = gr.playerResults["Nevio"];
 
                     if (!hres.handResults.empty() and hres.handResults[0].insuranceOutcome != InsuranceOutcome::NotTaken) {
@@ -150,7 +149,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                 otherMiniCache.emplace_back(baseEV, inputMap);
             }
             double insuranceEV = totalInsuranceWager > 0 ? totalInsuranceWinnings / totalInsuranceWager : 0.0;
-            std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
+            //std::cout << uniqueKey << "insurance EV: " << insuranceEV << "\n";
             // determine choice of inputMap to be saved inside cache
             miniCache.emplace_back(-0.5, "lateSurrender"); // lateSurrender EV is always -0.5
             std::sort(miniCache.begin(), miniCache.end(),
@@ -219,6 +218,44 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
         //std::cout << "Key: " << key;
 
         //std::cout << "  EV: " << vec[0].first << ", Choice: " << vec[0].second << "\n";
+    }
+
+    std::ofstream basicStrategyFile("basicStrategy.csv");
+    basicStrategyFile << "HardTotals,2,3,4,5,6,7,8,9,T,A\n";
+    for (int i = 20; i >= 5;--i) {
+		basicStrategyFile << i;
+        for (int j = 2; j <= 11; ++j) {
+            std::string k = makeUniqueKey(i, 2, false, false, j, shoe);
+            if (cache.count(k)) {
+                std::string c = cache.at(k)[0].second.at("choice"); // get basic strategy choice
+				basicStrategyFile << "," << c;
+            }
+        }
+		basicStrategyFile << "\n";
+    }
+    basicStrategyFile << "SoftTotals,2,3,4,5,6,7,8,9,T,A\n";
+    for (int i = 9; i >= 2; --i) {
+		basicStrategyFile << "A" << i; 
+        for (int j = 2; j <= 11; ++j) {
+            std::string k = makeUniqueKey(11+i, 2, true, false, j, shoe);
+            if (cache.count(k)) {
+                std::string c = cache.at(k)[0].second.at("choice"); // get basic strategy choice
+                basicStrategyFile << "," << c;
+            }
+        }
+        basicStrategyFile << "\n";
+    }
+    basicStrategyFile << "PairTotals,2,3,4,5,6,7,8,9,T,A\n";
+    for (int i = 20; i >= 4; i -= 2) {
+        basicStrategyFile << i;
+        for (int j = 2; j <= 11; ++j) {
+            std::string k = makeUniqueKey(i, 2, false, true, j, shoe);
+            if (cache.count(k)) {
+                std::string c = cache.at(k)[0].second.at("choice"); // get basic strategy choice
+                basicStrategyFile << "," << c;
+            }
+        }
+        basicStrategyFile << "\n";
     }
     return cache;
 }

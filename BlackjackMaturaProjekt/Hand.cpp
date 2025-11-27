@@ -114,8 +114,12 @@ int Hand::getCardsCount() {
     return static_cast<int>(cards.size());
 }
 
-bool Hand::isSplittable() {
-    return cards.size() == 2 and (getCard(0).getRank() == getCard(1).getRank());
+bool Hand::isSplittable(int playerhandSize) {
+    if(not r.resplitAcesAllowed and getCard(0).getRank() == 'A' and flagIsSplitHand) {
+        return false;
+	}
+
+    return cards.size() == 2 and (getCard(0).getValue() == getCard(1).getValue()) and playerhandSize < r.maxSplitHands;
 }
 
 void Hand::printHand() const noexcept {

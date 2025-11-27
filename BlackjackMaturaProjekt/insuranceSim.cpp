@@ -38,10 +38,10 @@ void insuranceSimulation() {
     double pTens = 0;
     double insuranceBet = std::stod(inputMap["bet"]) / 2;
     for (int i = 0; i < iterations; ++i) {
-        counts+= shoe.setHiLoTrueCount(3.4); // 3.4 is breakeven 
+        counts+= shoe.setHiLoTrueCount(4); // 3.4 is breakeven 
         pTens += shoe.getPTen();
         Card holeCard = shoe.getCardsVector().back();
-
+    
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, &startingCards, nullptr); // strategy doesnt matter, we always stand our hand and only analyse insurance outcome
         auto& hres = gr.playerResults["Nevio"];
         double netInsuranceProfit = hres.handResults[0].insuranceWinnings; // we can take 0 because we have only one hand guaranteed. Unsafe but too lazy to do otherwise

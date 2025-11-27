@@ -25,16 +25,13 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
-    int iterations = 1000000;
+	int iterations = 30000000; // 30 million. SD circa 1.15, SEM circa 0.021%
     double counts = 0;
 	double globalNetProfit = 0;
     int moduluFactor = 20;
     std::vector<double> bankrollHistory;
     for (int i = 0; i < iterations; ++i) {
-        //shoe.reset();
-        // optionally modify deck here
-        //shoe.removeCard('2', 'S');
-        //counts+= shoe.setHiLoTrueCount(6);
+        counts+= shoe.setHiLoTrueCount(0);
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
         
         auto& hres = gr.playerResults["Nevio"];

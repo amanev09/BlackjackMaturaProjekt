@@ -8,16 +8,14 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     // plays one round of blackjack using certain rules for all players on the table
     gameResult gr; // for statistican analysis, tracks the result for all players and their hands
 
-
     auto getInput = [&](const std::string& promptKey, const std::string& cacheKey = "-1", const std::vector<char> allowedChoices = {}) -> std::string {
 
         if (cache && cache->count(cacheKey)) {
             const auto& vec = cache->at(cacheKey);
-
             if (promptKey == "choice") {
                 for (const auto& pair : vec) {
                     const auto& map = pair.second;
-                    for (char c : allowedChoices) {
+                    for (char c : allowedChoices) { 
                         if (map.count("choice") && map.at("choice") == std::string(1, c)) {
                             //std::cout << map.at("choice")<<"\n";
                             return map.at("choice");
@@ -42,6 +40,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     }
                 }
                 // occurs when we split A,A and get A,A and choice is 'p' but gamerules prohibit resplitting aces
+				std::cerr << "Error: choice from inputChoices not in allowedChoices, defaulting to first allowed choice\n";
                 return std::string(1, allowedChoices[0]);
             }
             //std::cout << inputChoices->at(promptKey)<<std::endl;
@@ -104,6 +103,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     for (Player& player : players) {
         for (size_t i = 0; i < player.getHands().size(); ++i) { // loop all hands
             Hand& hand = player.getHands()[i];
+            //hand.setFlagIsSplitHand(true);
             double bet;
             while (true) {
                 //std::cout << player.getName() << "'s hand " << i + 1 << " Bet: ";
@@ -166,7 +166,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
         }
     }
     // quick print unique game key (identifier)
-    std::string gameKey = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].getCardsCount(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(), d.getUpCard().getValue(), shoe);
+    std::string gameKey = makeUniqueKey(players[0].getHands()[0].getValue(), players[0].getHands()[0].getCardsCount(), players[0].getHands()[0].isSoft(), players[0].getHands()[0].isSplittable(players[0].getHands().size()), d.getUpCard().getValue(), shoe);
     
     ////std::cout << gameKey;
     // starting from here, we will also pass the 
@@ -331,7 +331,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
             int j = 0;
             while (player.getHands()[i].getFlagIsInTheGame()) {
                 // update gameKey to ensure correct lookups
-                gameKey = makeUniqueKey(players[0].getHands()[i].getValue(), players[0].getHands()[i].getCardsCount(), players[0].getHands()[i].isSoft(), players[0].getHands()[i].isSplittable(), d.getUpCard().getValue(), shoe);
+                gameKey = makeUniqueKey(players[0].getHands()[i].getValue(), players[0].getHands()[i].getCardsCount(), players[0].getHands()[i].isSoft(), players[0].getHands()[i].isSplittable(players[0].getHands().size()), d.getUpCard().getValue(), shoe);
                 j += 1;
                 // hand still in the game
                 // ask the owner what to do

@@ -129,12 +129,12 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
             }
 
             startingCards.insert_or_assign("dealer1", Card(c, 'S')); // assign when it doesnt exist, insert when it does
-            std::string uniqueKey = makeUniqueKey(h.getValue(), 2, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
+            std::string uniqueKey = makeUniqueKey(h.getValue(), 2, h.isSoft(), h.isSplittable(players.back().getHands().size()), startingCards.at("dealer1").getValue(), shoe);
             if (h.getValue() == 21) {
-                uniqueKey = makeUniqueKey(h.getValue(), 2, true, h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
+                uniqueKey = makeUniqueKey(h.getValue(), 2, true, h.isSplittable(players.back().getHands().size()), startingCards.at("dealer1").getValue(), shoe);
                 // there is no hard 21 with 2 cards, only soft, so manually add entry
             }
-            std::string uniqueKeyMultiCard = makeUniqueKey(h.getValue(), 3, h.isSoft(), h.isSplittable(), startingCards.at("dealer1").getValue(), shoe);
+            std::string uniqueKeyMultiCard = makeUniqueKey(h.getValue(), 3, h.isSoft(), h.isSplittable(players.back().getHands().size()), startingCards.at("dealer1").getValue(), shoe);
             // correct starting cards now assigned
             for (double HiLoCount = -5; HiLoCount <= 5; HiLoCount += 1.0) {
 
@@ -188,7 +188,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
                     if (newestIndexpoint.second.count("choice") and otherMiniCache.front().second.count("choice") and newestIndexpoint.second.at("choice") != otherMiniCache.front().second.at("choice")) {
                         // it differs meaning currenct count is index point
                         deviationsVector.emplace_back(HiLoCount, otherMiniCache.front().second);
-                        std::cout <<uniqueKey<< "\nIndex point: " << HiLoCount << ", deviation choice: " << otherMiniCache.front().second["choice"]<<std::endl;
+                        //std::cout <<uniqueKey<< "\nIndex point: " << HiLoCount << ", deviation choice: " << otherMiniCache.front().second["choice"]<<std::endl;
                     }
                 }
                 else {
