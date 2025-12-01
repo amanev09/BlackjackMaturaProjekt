@@ -10,6 +10,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     Dealer d;
     Shoe shoe(r.deckCount);
     bj::WeightedOnlineStats weightedStats;
+    bj::OnlineStats stats;
     shoe.shuffle();
     std::unordered_map<std::string, std::string> inputMap = { // for info like numHands or bet, not for actual choice making. Confirm by setting irrelevant entries to gibberish
     {"numHands", "1"},
@@ -24,20 +25,24 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
 
     std::unordered_map<int, std::string> betSpread = {
     {0, "1"},
-    {1, "2"},
-    {2, "4"},
-    {3, "8"},
-    {4, "16"},
-    {5, "32"},
-    {6, "50"},
-    {7, "100"},
+    {1, "1"},
+    {2, "2"},
+    {3, "4"},
+    {4, "8"},
+    {5, "16"},
+    {6, "32"},
+    {7, "64"},
     {8, "100"},
     {9, "100"},
     {10, "100"},
     {11, "100"},
     {12, "100"},
+    {13, "100"},
+    {14, "100"},
+    {15, "100"},
+    {16, "100"},
     };
-    int iterations = 1000000;
+    int iterations = 30000000;
     double globalNetProfit = 0;
     int moduluFactor = 1;
     std::vector<double> bankrollHistory;
@@ -64,6 +69,7 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
         for (handResult& h : hres.handResults) { netProfit += (h.handWinnings+h.insuranceWinnings);} // EV calculated per initial wager, so no need to incclude insurance wager in calc.
         double x = netProfit / initialBet;
         weightedStats.add(x, initialBet);
+        stats.add(netProfit);
 		globalNetProfit += netProfit;
         if (i % moduluFactor == 0) {
             bankrollHistory.push_back(globalNetProfit);
@@ -74,9 +80,18 @@ void HiLoSim(std::unordered_map<std::string, std::vector<std::pair<double, std::
     double sd= weightedStats.sd();
     double sem = weightedStats.sem();
 
+    double BUEV = stats.mean;
+	double BUvariance = stats.variance();
+	double BUsd = stats.sd();
+	double BUsem = stats.sem();
+
     std::cout << "Total HiLo + strategy EV: "<<EV * 100 << "%" <<" with a standard error of the mean of: "<<sem*100<<"%" << "\n";
     std::cout << "Variance: " << variance << std::endl;
     std::cout << "Standard  deviation: " << sd << std::endl;
+
+    std::cout << "Total HiLo + strategy EV (betting units): " << BUEV << " with a standard error of the mean of: " << BUsem << "\n";
+    std::cout << "Variance: " << BUvariance << std::endl;
+    std::cout << "Standard  deviation: " << BUsd << std::endl;
 
     std::ofstream bankrollFile("bankrollHistory_countingSim.csv");
     bankrollFile << "Round,Bankroll\n";

@@ -12,7 +12,7 @@ struct GameRules {
     bool insuranceAllowed = true;
     bool evenMoneyAllowed = true;
     bool resplitAcesAllowed = false; 
-    bool hitSplitAcesAllowed = false;
+    bool hitSplitAcesAllowed = false; 
     bool doubleDownAlwaysAllowed = true;
     std::vector<int> doubleDownOnCardValues = {11,10,9}; // only needed when doubleDownAlwaysAllowed = false
     double minBet = 0;

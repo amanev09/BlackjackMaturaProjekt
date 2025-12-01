@@ -69,6 +69,12 @@
     <ClCompile Include="basicStrategyRewrite.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="countDensitySim.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="strategyToCSV.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Card.h">
@@ -125,9 +131,11 @@
     <ClInclude Include="basicStrategyRewrite.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="strategyToCSV.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="basicStrategyForSimulationCount0-base" />
-    <None Include="basicStrategyForSimulationCount0-base2" />
   </ItemGroup>
 </Project>

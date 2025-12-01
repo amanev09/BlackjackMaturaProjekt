@@ -14,6 +14,7 @@
 #include "DebugSim.h"
 #include "Online_stats.h"
 #include "basicStrategyRewrite.h"
+#include "strategyToCSV.h"
 int main()
 {
     //std::cout << "Welcome to the blackjack simulator by Nevio Amato!" << std::endl;
@@ -61,25 +62,27 @@ int main()
     */
 
 
-        bool calc = true;
+        bool calc = false;
         std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> strategy;
         std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> devStrat;
         if (calc) {
             strategy = basicStrategyRewrite();
-            saveStrategy(strategy, "basicStrategyForSimulationCount0-base2");
+            saveStrategy(strategy, "basicStrategyForSimulationCount0-8Deck");
         }
         else {
-            loadStrategy(strategy, "basicStrategyForSimulationCount0-base2");
+            loadStrategy(strategy, "basicStrategyForSimulationCount0-base");
         }
         
 
+		
         //devStrat = deviationStrategy(&strategy);
         //strategy = basicStrategy();
         //strategy = basicStrategyRewrite();
 		//debugSim(&strategy);
-        strategySimulation(&strategy);
+        //strategySimulation(&strategy);
         HiLoSim(&strategy);
         //insuranceSimulation();
-    
+        //strategyToBasicStrategyEVChart(strategy);
+		//strategyToBasicStrategyChart(strategy);
     return 0;
 }

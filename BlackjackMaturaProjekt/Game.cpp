@@ -220,7 +220,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
 
     bool flagRoundEnd = false;
 
-    if (d.getUpCard().getRank() == 'A' and not flagRoundEnd and r.peakAmericanStyle) {
+    if (d.getUpCard().getRank() == 'A' and not flagRoundEnd) {
         // dealer has ace upcard, offer insurance and if necessary even money
         for (Player& player : players) { // loop through every player
             for (size_t i = 0; i < player.getHands().size(); ++i) {
@@ -286,7 +286,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
 
         }
         // offered everything to all players, dealer peeks whole card now
-        if (d.getHand().getValue() == 21) {
+        if (r.peakAmericanStyle and d.getHand().getValue() == 21) {
             // dealer blackjack, end round!
             flagRoundEnd = true;
         }
@@ -458,7 +458,13 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
     //std::cout << "\n--Dealer turn--\n";
     //std::cout << "Dealer: ";  d.getHand().printHand();
     // give second card when playing ENHC
-    if (not r.peakAmericanStyle) { d.addCard(getStarterCard("dealer2")); }
+    if (not r.peakAmericanStyle) {
+        d.addCard(getStarterCard("dealer2")); 
+		// also check for dealer blackjack now
+        if (d.getHand().getValue() == 21 && d.getHand().getCardsCount() == 2) {
+            gr.dealerHadBlackjack = true;
+        }
+    }
     while (d.getHand().getValue() < 17 or (d.getHand().getValue() == 17 and d.getHand().isSoft() and r.hitSoft17)) { // soft17 = false means h17 rules so hitting
         // as long as dealer is below 16 OR if on 17 AND soft he must hit(depending on rules)
         d.getHand().addCard(shoe.deal());
@@ -556,7 +562,7 @@ gameResult blackJack(GameRules& r, std::vector<Player>& players, Dealer& d, Shoe
                     }
                 }
             }
-            else if (hand.getValue() == 21 and hand.getCardsCount() > 2 and d.getHand().getValue() == 21 && d.getHand().getCardsCount() == 2 and not r.peakAmericanStyle) {
+            else if (hand.getValue() == 21 and (hand.getCardsCount() > 2 or hand.getFlagIsSplitHand()) and d.getHand().getValue() == 21 && d.getHand().getCardsCount() == 2 and not r.peakAmericanStyle) {
                 // exception with european peek, if we get to 21 (possible because dealer doesnt peek) with more than 2 cards and the dealer does have a natural blackjack, we lose
                 double payout = 0;
                 //std::cout << player.getName() << "'s hand " << i + 1 << " \033[31mloses\033[0m, payout: " << payout << "\n";

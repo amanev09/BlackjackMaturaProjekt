@@ -8,6 +8,7 @@
 #include "countingStrategyEnum.h"
 
 void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>>* strategy) {
+     
     std::vector<Player> players;
     GameRules r;
     players.emplace_back("Nevio");
@@ -25,24 +26,26 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     {"lateSurrender", "n"},
     {"choice", "f"}
     };
+    
 	int iterations = 30000000; // 30 million. SD circa 1.15, SEM circa 0.021%
     double counts = 0;
 	double globalNetProfit = 0;
-    int moduluFactor = 20;
+    int moduluFactor = 1000;
     std::vector<double> bankrollHistory;
+    
     for (int i = 0; i < iterations; ++i) {
-        counts+= shoe.setHiLoTrueCount(0);
+        counts += shoe.setHiLoTrueCount(0);
         gameResult gr = blackJack(r, players, d, shoe, &inputMap, nullptr, strategy); // play one game of blackjack using a premade strategy(for example basic strategy)
-        
+
         auto& hres = gr.playerResults["Nevio"];
         double initialBet = std::stod(inputMap["numHands"]) * std::stod(inputMap["bet"]);
         double netProfit = 0;
-        for (handResult& h : hres.handResults) {netProfit += h.handWinnings;}
+        for (handResult& h : hres.handResults) { netProfit += h.handWinnings; }
         double x = netProfit / initialBet;
         stats.add(x); // averages the EV results of my simulation
-		globalNetProfit += netProfit;
+        globalNetProfit += netProfit;
         if (i % moduluFactor == 0) {
-			bankrollHistory.push_back(globalNetProfit);
+            bankrollHistory.push_back(globalNetProfit);
         }
     }
 
@@ -51,10 +54,11 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     double sd = stats.sd();
     double sem = stats.sem();
 
-    std::cout << "Total strategy EV: " << 100.0* EV <<"% with a standard error of the mean of "<<sem*100<<"%, average hiLo count was: "<< counts / (static_cast<double>(iterations)) << "\n";
+    std::cout << "Total strategy EV: " << 100.0 * EV << "% with a standard error of the mean of " << sem * 100 << "%, average hiLo count was: " << counts / (static_cast<double>(iterations)) << "\n";
     std::cout << "Variance: " << variance << std::endl;
     std::cout << "Standard deviation: " << sd << std::endl;
-
+    
+    /*
 	std::ofstream bankrollFile("bankrollHistory_strategySimulation.csv");
     bankrollFile << "Round,Bankroll\n";
 
@@ -63,4 +67,5 @@ void strategySimulation(std::unordered_map<std::string, std::vector<std::pair<do
     }
 
     bankrollFile.close();
+    */
 }

@@ -133,6 +133,7 @@
     <ClCompile Include="basicStrategyRewrite.cpp" />
     <ClCompile Include="Blackjack.cpp" />
     <ClCompile Include="Card.cpp" />
+    <ClCompile Include="countDensitySim.cpp" />
     <ClCompile Include="CountingSim.cpp" />
     <ClCompile Include="Dealer.cpp" />
     <ClCompile Include="DebugSim.cpp" />
@@ -147,6 +148,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shoe.cpp" />
     <ClCompile Include="strategySimulation.cpp" />
+    <ClCompile Include="strategyToCSV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basicStrategy.h" />
@@ -167,10 +169,10 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shoe.h" />
     <ClInclude Include="strategySimulation.h" />
+    <ClInclude Include="strategyToCSV.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="basicStrategyForSimulationCount0-base" />
-    <None Include="basicStrategyForSimulationCount0-base2" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

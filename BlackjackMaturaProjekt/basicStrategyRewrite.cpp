@@ -13,6 +13,7 @@
 #include "basicStrategy.h"
 #include "countingStrategyEnum.h"
 #include "basicStrategyRewrite.h"
+#include "Online_stats.h"
 
 std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map<std::string, std::string>>>> basicStrategyRewrite() {
     std::vector<Player> players;
@@ -88,7 +89,7 @@ std::unordered_map<std::string, std::vector<std::pair<double, std::unordered_map
     Hand({Card('2', 'S')}),
     };
 
-    int iterations = 1000000;
+    int iterations = 10000;
     int doubleAAIterations = 0;
     int doubleTWOTWOIterations = 0;
     int originalSplitSetting = r.maxSplitHands;
